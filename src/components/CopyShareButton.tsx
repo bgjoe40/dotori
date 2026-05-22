@@ -5,7 +5,7 @@ interface Props {
   label?: string;
 }
 
-export default function CopyShareButton({ text, label = '카톡 공유 텍스트 복사' }: Props) {
+export default function CopyShareButton({ text, label = '텍스트로 복사' }: Props) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -30,23 +30,13 @@ export default function CopyShareButton({ text, label = '카톡 공유 텍스트
   };
 
   return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        onClick={handleCopy}
-        disabled={!text}
-        className="w-full rounded-lg bg-yellow-300 px-4 py-3 text-sm font-bold text-stone-800 shadow-sm hover:bg-yellow-400 disabled:opacity-40"
-      >
-        {copied ? '✅ 복사 완료!' : `📋 ${label}`}
-      </button>
-      <details className="rounded-lg border border-stone-200 bg-stone-50 p-2">
-        <summary className="cursor-pointer text-xs text-stone-500">
-          공유 텍스트 미리보기
-        </summary>
-        <pre className="mt-2 whitespace-pre-wrap break-all text-[11px] text-stone-700">
-          {text || '— 입력 데이터가 없습니다 —'}
-        </pre>
-      </details>
-    </div>
+    <button
+      type="button"
+      onClick={handleCopy}
+      disabled={!text}
+      className="w-full rounded-lg bg-yellow-300 px-4 py-3 text-sm font-bold text-stone-800 shadow-sm hover:bg-yellow-400 disabled:opacity-40"
+    >
+      {copied ? '✅ 복사 완료!' : `📋 ${label}`}
+    </button>
   );
 }

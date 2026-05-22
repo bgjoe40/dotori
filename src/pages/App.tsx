@@ -99,6 +99,14 @@ export default function App() {
     [expenseResult, state.expenses, state.participants, state.meeting.name],
   );
 
+  const combinedShareText = useMemo(() => {
+    const parts: string[] = [];
+    if (carpoolVehicles.length > 0) parts.push(carpoolShareText);
+    if (rentalVehicles.length > 0) parts.push(rentalShareText);
+    if (state.expenses.length > 0) parts.push(expenseShareText);
+    return parts.join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
+  }, [carpoolShareText, rentalShareText, expenseShareText, carpoolVehicles.length, rentalVehicles.length, state.expenses.length]);
+
   const finalNetBalance = useMemo(() => {
     const balance = new Map<string, number>();
     const add = (id: string, n: number) => balance.set(id, (balance.get(id) ?? 0) + n);
@@ -405,17 +413,10 @@ export default function App() {
                   participants={state.participants}
                 />
               )}
-              {state.expenses.length === 0 ? (
+              {state.expenses.length === 0 && (
                 <p className="mt-3 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 py-6 text-center text-sm text-amber-700">
                   경비 항목을 추가하면 정산 결과가 표시됩니다.
                 </p>
-              ) : (
-                <div className="mt-3 space-y-2">
-                  <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-                    ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
-                  </p>
-                  <CopyShareButton text={expenseShareText} />
-                </div>
               )}
             </>
           ) : (
@@ -457,20 +458,12 @@ export default function App() {
                       차량을 추가하면 정산 결과가 표시됩니다.
                     </p>
                   ) : (
-                    <>
-                      <CarpoolResult
-                        result={carpoolResult}
-                        vehicles={state.vehicles}
-                        participants={state.participants}
-                        fuelRatePerKm={fuelRate}
-                      />
-                      <div className="mt-3 space-y-2">
-                        <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-                          ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
-                        </p>
-                        <CopyShareButton text={carpoolShareText} />
-                      </div>
-                    </>
+                    <CarpoolResult
+                      result={carpoolResult}
+                      vehicles={state.vehicles}
+                      participants={state.participants}
+                      fuelRatePerKm={fuelRate}
+                    />
                   )}
                 </>
               ) : (
@@ -480,15 +473,7 @@ export default function App() {
                       렌트 차량을 추가하면 정산 결과가 표시됩니다.
                     </p>
                   ) : (
-                    <>
-                      <RentalResult results={rentalResults} participants={state.participants} />
-                      <div className="mt-3 space-y-2">
-                        <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-                          ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
-                        </p>
-                        <CopyShareButton text={rentalShareText} />
-                      </div>
-                    </>
+                    <RentalResult results={rentalResults} participants={state.participants} />
                   )}
                 </>
               )}
@@ -774,6 +759,9 @@ export default function App() {
                 </div>
               </section>
             )}
+            <div className="mt-4">
+              <CopyShareButton text={combinedShareText} />
+            </div>
           </section>
         )}
 
