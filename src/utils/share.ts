@@ -137,6 +137,7 @@ export function buildFinalSummaryShareText(params: {
   banjangId?: string;
   finalNetBalance: Map<string, number>;
   finalTransfers: { fromId: string; toId: string; amount: number }[];
+  participantBreakdown: Map<string, { label: string; amount: number }[]>;
   banjangData: {
     banjang: Participant;
     banjangBal: number;
@@ -144,7 +145,7 @@ export function buildFinalSummaryShareText(params: {
     outgoing: { id: string; name: string; amount: number }[];
   } | null;
 }): string {
-  const { meetingName, meetingDate, participants, banjangId, finalNetBalance, finalTransfers, banjangData } = params;
+  const { meetingName, meetingDate, participants, banjangId, finalNetBalance, finalTransfers, participantBreakdown, banjangData } = params;
   const lines: string[] = [];
 
   const header = meetingName ? `📊 ${meetingName} 최종 정산 요약` : '📊 최종 정산 요약';
@@ -169,6 +170,11 @@ export function buildFinalSummaryShareText(params: {
     const prefix = isBanjang ? `👑 ${p.name} (벙주)` : `• ${p.name}`;
     const balText = bal > 0 ? `+${formatKRW(bal)} 수령` : `${formatKRW(Math.abs(bal))} 납부`;
     lines.push(`${prefix}: ${balText}`);
+    const breakdown = participantBreakdown.get(p.id) ?? [];
+    for (const item of breakdown) {
+      const sign = item.amount >= 0 ? '+' : '-';
+      lines.push(`  ${item.label}: ${sign}${formatKRW(Math.abs(item.amount))}`);
+    }
   }
 
   if (!banjangData && finalTransfers.length > 0) {

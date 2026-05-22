@@ -246,11 +246,12 @@ export default function App() {
         banjangId: banjangId ?? undefined,
         finalNetBalance,
         finalTransfers,
+        participantBreakdown,
         banjangData,
       }),
     );
     return parts.join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
-  }, [carpoolShareText, rentalShareText, expenseShareText, carpoolVehicles.length, rentalVehicles.length, state.expenses.length, state.meeting.name, state.meeting.date, state.participants, banjangId, finalNetBalance, finalTransfers, banjangData]);
+  }, [carpoolShareText, rentalShareText, expenseShareText, carpoolVehicles.length, rentalVehicles.length, state.expenses.length, state.meeting.name, state.meeting.date, state.participants, banjangId, finalNetBalance, finalTransfers, participantBreakdown, banjangData]);
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
