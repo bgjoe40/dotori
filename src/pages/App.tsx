@@ -817,7 +817,7 @@ export default function App() {
 
       <footer className="mt-8 space-y-1 text-center text-[10px] text-stone-400">
         <p>⚠ 첫 탑승자 픽업지 기준 왕복거리 입력 · 편도 탑승자도 왕복 동일 기준 · 1원 단위 반올림</p>
-        <p>🌰 도토리 산행 정산 v1.0.0 · 2026-05-22</p>
+        <p>🌰 도토리 산행 정산 v1.0.1 · 2026-05-23</p>
       </footer>
     </div>
   );
