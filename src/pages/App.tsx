@@ -14,7 +14,7 @@ import { calcCarpoolSettlement } from '../domain/carpoolSettlement';
 import { calcRentalSettlement } from '../domain/rentalSettlement';
 import { calcExpenseSettlement } from '../domain/expenseSettlement';
 import { FUEL_RATE_PER_KM } from '../domain/fuel';
-import { buildCarpoolShareText, buildRentalShareText, buildExpenseShareText } from '../utils/share';
+import { buildCarpoolShareText, buildRentalShareText, buildExpenseShareText, buildFinalSummaryShareText } from '../utils/share';
 import { formatKRW } from '../utils/format';
 
 type Tab = 'carpool' | 'rental' | 'expense';
@@ -98,14 +98,6 @@ export default function App() {
       ),
     [expenseResult, state.expenses, state.participants, state.meeting.name],
   );
-
-  const combinedShareText = useMemo(() => {
-    const parts: string[] = [];
-    if (carpoolVehicles.length > 0) parts.push(carpoolShareText);
-    if (rentalVehicles.length > 0) parts.push(rentalShareText);
-    if (state.expenses.length > 0) parts.push(expenseShareText);
-    return parts.join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
-  }, [carpoolShareText, rentalShareText, expenseShareText, carpoolVehicles.length, rentalVehicles.length, state.expenses.length]);
 
   const finalNetBalance = useMemo(() => {
     const balance = new Map<string, number>();
@@ -240,6 +232,25 @@ export default function App() {
     rentalResults,
     expenseResult,
   ]);
+
+  const combinedShareText = useMemo(() => {
+    const parts: string[] = [];
+    if (carpoolVehicles.length > 0) parts.push(carpoolShareText);
+    if (rentalVehicles.length > 0) parts.push(rentalShareText);
+    if (state.expenses.length > 0) parts.push(expenseShareText);
+    parts.push(
+      buildFinalSummaryShareText({
+        meetingName: state.meeting.name,
+        meetingDate: state.meeting.date,
+        participants: state.participants,
+        banjangId: banjangId ?? undefined,
+        finalNetBalance,
+        finalTransfers,
+        banjangData,
+      }),
+    );
+    return parts.join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
+  }, [carpoolShareText, rentalShareText, expenseShareText, carpoolVehicles.length, rentalVehicles.length, state.expenses.length, state.meeting.name, state.meeting.date, state.participants, banjangId, finalNetBalance, finalTransfers, banjangData]);
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {

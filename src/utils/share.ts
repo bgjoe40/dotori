@@ -129,3 +129,80 @@ export function buildExpenseShareText(
   }
   return lines.join('\n');
 }
+
+export function buildFinalSummaryShareText(params: {
+  meetingName?: string;
+  meetingDate?: string;
+  participants: Participant[];
+  banjangId?: string;
+  finalNetBalance: Map<string, number>;
+  finalTransfers: { fromId: string; toId: string; amount: number }[];
+  banjangData: {
+    banjang: Participant;
+    banjangBal: number;
+    incoming: { id: string; name: string; amount: number }[];
+    outgoing: { id: string; name: string; amount: number }[];
+  } | null;
+}): string {
+  const { meetingName, meetingDate, participants, banjangId, finalNetBalance, finalTransfers, banjangData } = params;
+  const lines: string[] = [];
+
+  const header = meetingName ? `📊 ${meetingName} 최종 정산 요약` : '📊 최종 정산 요약';
+  lines.push(header);
+  if (meetingDate) lines.push(meetingDate);
+
+  const banjang = banjangId ? participants.find((p) => p.id === banjangId) : undefined;
+  const meta: string[] = [`참가자 ${participants.length}명`];
+  if (banjang) meta.push(`벙주: ${banjang.name}`);
+  lines.push(meta.join(' | '));
+
+  lines.push('━━━━━━━━━━━━━━━━━━');
+  lines.push('👤 참가자별 정산');
+
+  const sorted = [...participants].sort((a, b) =>
+    a.id === banjangId ? -1 : b.id === banjangId ? 1 : 0,
+  );
+  for (const p of sorted) {
+    const bal = finalNetBalance.get(p.id) ?? 0;
+    if (Math.abs(bal) < 1) continue;
+    const isBanjang = p.id === banjangId;
+    const prefix = isBanjang ? `👑 ${p.name} (벙주)` : `• ${p.name}`;
+    const balText = bal > 0 ? `+${formatKRW(bal)} 수령` : `${formatKRW(Math.abs(bal))} 납부`;
+    lines.push(`${prefix}: ${balText}`);
+  }
+
+  if (!banjangData && finalTransfers.length > 0) {
+    lines.push('━━━━━━━━━━━━━━━━━━');
+    lines.push('💸 정산 송금 내역');
+    for (const t of finalTransfers) {
+      const from = nameOf(t.fromId, participants);
+      const to = nameOf(t.toId, participants);
+      lines.push(`• ${from} → ${to}: ${formatKRW(t.amount)}`);
+    }
+  }
+
+  if (banjangData) {
+    lines.push('━━━━━━━━━━━━━━━━━━');
+    lines.push(`👑 벙주 정산 — ${banjangData.banjang.name}`);
+    if (banjangData.incoming.length > 0 || banjangData.banjangBal < -1) {
+      lines.push('📥 수금 내역 (벙주에게 납부)');
+      for (const { name, amount } of banjangData.incoming) {
+        lines.push(`• ${name} → ${banjangData.banjang.name}: ${formatKRW(amount)}`);
+      }
+      if (banjangData.banjangBal < -1) {
+        lines.push(`• ${banjangData.banjang.name} (본인 부담): ${formatKRW(Math.round(-banjangData.banjangBal))}`);
+      }
+    }
+    if (banjangData.outgoing.length > 0 || banjangData.banjangBal > 1) {
+      lines.push('📤 지급 내역 (벙주가 전달)');
+      for (const { name, amount } of banjangData.outgoing) {
+        lines.push(`• ${banjangData.banjang.name} → ${name}: ${formatKRW(amount)}`);
+      }
+      if (banjangData.banjangBal > 1) {
+        lines.push(`• ${banjangData.banjang.name} (본인 수령): ${formatKRW(Math.round(banjangData.banjangBal))}`);
+      }
+    }
+  }
+
+  return lines.join('\n');
+}
