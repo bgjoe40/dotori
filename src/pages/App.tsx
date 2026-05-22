@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import AcornRain from '../components/AcornRain';
+import SkyBackground from '../components/SkyBackground';
 import ParticipantList from '../components/ParticipantList';
 import VehicleCard from '../components/VehicleCard';
 import CarpoolResult from '../components/CarpoolResult';
@@ -274,6 +275,7 @@ export default function App() {
 
   return (
     <div className="relative mx-auto min-h-screen max-w-2xl px-4 pb-24 pt-6">
+      <SkyBackground />
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
       <AcornRain />
       {/* 헤더 */}
