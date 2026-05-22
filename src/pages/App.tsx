@@ -475,13 +475,21 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <RentalResult results={rentalResults} participants={state.participants} />
-                  <div className="mt-3 space-y-2">
-                    <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-                      ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                  {rentalVehicles.length === 0 ? (
+                    <p className="mt-3 rounded-xl border-2 border-dashed border-purple-300 bg-purple-50/60 py-6 text-center text-sm text-purple-800">
+                      렌트 차량을 추가하면 정산 결과가 표시됩니다.
                     </p>
-                    <CopyShareButton text={rentalShareText} />
-                  </div>
+                  ) : (
+                    <>
+                      <RentalResult results={rentalResults} participants={state.participants} />
+                      <div className="mt-3 space-y-2">
+                        <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
+                          ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                        </p>
+                        <CopyShareButton text={rentalShareText} />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </>

@@ -9,14 +9,6 @@ interface Props {
 export default function RentalResult({ results, participants }: Props) {
   const nameOf = (id: string) => participants.find((p) => p.id === id)?.name ?? '?';
 
-  if (results.length === 0) {
-    return (
-      <section className="rounded-xl border-2 border-purple-300 bg-white p-4 text-center text-xs text-stone-400">
-        렌트 차량을 추가하면 결과가 표시됩니다.
-      </section>
-    );
-  }
-
   return (
     <section className="space-y-3">
       {results.map(({ vehicle: v, result: r }, idx) => (
