@@ -398,17 +398,25 @@ export default function App() {
                   + 경비 항목 추가
                 </button>
               </div>
-              <ExpenseResult
-                result={expenseResult}
-                expenses={state.expenses}
-                participants={state.participants}
-              />
-              <div className="mt-3 space-y-2">
-                <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-                  ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+              {state.expenses.length > 0 && (
+                <ExpenseResult
+                  result={expenseResult}
+                  expenses={state.expenses}
+                  participants={state.participants}
+                />
+              )}
+              {state.expenses.length === 0 ? (
+                <p className="mt-3 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 py-6 text-center text-sm text-amber-700">
+                  경비 항목을 추가하면 정산 결과가 표시됩니다.
                 </p>
-                <CopyShareButton text={expenseShareText} />
-              </div>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
+                    ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                  </p>
+                  <CopyShareButton text={expenseShareText} />
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -444,18 +452,26 @@ export default function App() {
               </div>
               {tab === 'carpool' ? (
                 <>
-                  <CarpoolResult
-                    result={carpoolResult}
-                    vehicles={state.vehicles}
-                    participants={state.participants}
-                    fuelRatePerKm={fuelRate}
-                  />
-                  <div className="mt-3 space-y-2">
-                    <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-                      ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                  {carpoolVehicles.length === 0 ? (
+                    <p className="mt-3 rounded-xl border-2 border-dashed border-green-300 bg-green-50/60 py-6 text-center text-sm text-green-800">
+                      차량을 추가하면 정산 결과가 표시됩니다.
                     </p>
-                    <CopyShareButton text={carpoolShareText} />
-                  </div>
+                  ) : (
+                    <>
+                      <CarpoolResult
+                        result={carpoolResult}
+                        vehicles={state.vehicles}
+                        participants={state.participants}
+                        fuelRatePerKm={fuelRate}
+                      />
+                      <div className="mt-3 space-y-2">
+                        <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
+                          ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                        </p>
+                        <CopyShareButton text={carpoolShareText} />
+                      </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
