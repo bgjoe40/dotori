@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import AcornRain from '../components/AcornRain';
 import ParticipantList from '../components/ParticipantList';
 import VehicleCard from '../components/VehicleCard';
@@ -22,6 +22,7 @@ export default function App() {
   const store = useSettlementStore();
   const [tab, setTab] = useState<Tab>('carpool');
   const [showGuide, setShowGuide] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── 테마 (다크/라이트) ─────────────────────────────────────────
@@ -158,6 +159,87 @@ export default function App() {
       }, []);
     return { banjang, banjangBal, incoming, outgoing };
   }, [banjangId, state.participants, finalNetBalance]);
+
+  /** 참가자별 카풀/렌트/경비 세부 내역 (최종 정산 요약 아코디언) */
+  const participantBreakdown = useMemo(() => {
+    const map = new Map<string, { label: string; amount: number }[]>();
+    for (const p of state.participants) {
+      const items: { label: string; amount: number }[] = [];
+
+      // 카풀 부담
+      const carpoolOwed = carpoolResult.owed.find((o) => o.participantId === p.id);
+      if (carpoolOwed && carpoolOwed.fuelShare > 0) {
+        items.push({ label: '🚗 유류비 부담', amount: -carpoolOwed.fuelShare });
+      }
+      if (carpoolOwed && carpoolOwed.laborShare > 0) {
+        items.push({ label: '🚗 수고비 부담', amount: -carpoolOwed.laborShare });
+      }
+      // 카풀 운전자 수령
+      for (const payout of carpoolResult.driverPayouts) {
+        if (payout.driverId === p.id) {
+          const vIdx = carpoolVehicles.findIndex((v) => v.id === payout.vehicleId);
+          items.push({ label: `🚗 운전자 수령 (차량${vIdx + 1})`, amount: payout.amount });
+        }
+      }
+
+      // 렌트 부담/수령
+      rentalResults.forEach(({ vehicle: rv, result: rr }, idx) => {
+        const rOwed = rr.owed.find((o) => o.participantId === p.id);
+        if (rOwed && rOwed.fuelShare > 0) {
+          items.push({ label: `🚐 렌트비 (차량${idx + 1})`, amount: -rOwed.fuelShare });
+        }
+        if (rOwed && rOwed.laborShare > 0) {
+          items.push({ label: `🚐 수고비 (차량${idx + 1})`, amount: -rOwed.laborShare });
+        }
+        for (const dr of rr.driverReceipts) {
+          if (dr.driverId === p.id) {
+            items.push({ label: `🚐 운전자 수령 (차량${idx + 1})`, amount: dr.amount });
+          }
+        }
+        void rv; // used for array index only
+      });
+
+      // 경비 부담/수령 (항목별)
+      for (const exp of state.expenses) {
+        const item = expenseResult.items.find((i) => i.expenseId === exp.id);
+        if (!item) continue;
+        if (exp.sharerIds.includes(p.id) && p.id !== exp.payerId) {
+          items.push({
+            label: `🧾 ${exp.description || '경비'}`,
+            amount: -item.perPerson,
+          });
+        }
+        if (p.id === exp.payerId) {
+          const nonSelf = exp.sharerIds.filter((id) => id !== p.id).length;
+          if (nonSelf > 0) {
+            items.push({
+              label: `🧾 ${exp.description || '경비'} 수령`,
+              amount: item.perPerson * nonSelf,
+            });
+          }
+        }
+      }
+
+      map.set(p.id, items);
+    }
+    return map;
+  }, [
+    state.participants,
+    state.expenses,
+    carpoolResult,
+    carpoolVehicles,
+    rentalResults,
+    expenseResult,
+  ]);
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleExport = () => {
     const blob = new Blob([store.exportJson()], { type: 'application/json' });
@@ -319,7 +401,10 @@ export default function App() {
                 expenses={state.expenses}
                 participants={state.participants}
               />
-              <div className="mt-3">
+              <div className="mt-3 space-y-2">
+                <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
+                  ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                </p>
                 <CopyShareButton text={expenseShareText} />
               </div>
             </>
@@ -361,15 +446,22 @@ export default function App() {
                     result={carpoolResult}
                     vehicles={state.vehicles}
                     participants={state.participants}
+                    fuelRatePerKm={fuelRate}
                   />
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-2">
+                    <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
+                      ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                    </p>
                     <CopyShareButton text={carpoolShareText} />
                   </div>
                 </>
               ) : (
                 <>
                   <RentalResult results={rentalResults} participants={state.participants} />
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-2">
+                    <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
+                      ⚠️ 아래 <strong>최종 정산 요약</strong>을 기준으로 실제 송금해주세요.
+                    </p>
                     <CopyShareButton text={rentalShareText} />
                   </div>
                 </>
@@ -442,30 +534,98 @@ export default function App() {
                   const bal = finalNetBalance.get(p.id) ?? 0;
                   if (Math.abs(bal) < 1) return null;
                   const isBanjang = p.id === banjangId;
+                  const isExpanded = expandedIds.has(p.id);
+                  const breakdown = participantBreakdown.get(p.id) ?? [];
                   return (
-                    <tr key={p.id} className="border-b border-amber-100 last:border-0">
-                      <td className="py-1.5 pr-2">
-                        <span className="flex items-center gap-1 font-semibold text-stone-800">
-                          {isBanjang && <span className="text-sm leading-none">👑</span>}
-                          {p.name}
-                          {isBanjang && (
-                            <span className="ml-0.5 text-[10px] font-bold text-amber-600">벙주</span>
-                          )}
-                        </span>
-                      </td>
-                      <td className={
-                        'py-1.5 text-right text-xs font-bold ' +
-                        (isBanjang
-                          ? 'text-amber-800'
-                          : bal > 0
-                          ? 'text-green-700'
-                          : 'text-red-600')
-                      }>
-                        {bal > 0
-                          ? `+${formatKRW(bal)} 수령`
-                          : `${formatKRW(Math.abs(bal))} 납부`}
-                      </td>
-                    </tr>
+                    <Fragment key={p.id}>
+                      <tr
+                        className={
+                          'cursor-pointer select-none transition-colors ' +
+                          (isExpanded
+                            ? 'bg-amber-100/60'
+                            : 'hover:bg-amber-50/50')
+                        }
+                        onClick={() => toggleExpanded(p.id)}
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isExpanded}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggleExpanded(p.id);
+                          }
+                        }}
+                      >
+                        <td className="py-2 pr-2">
+                          <span className="flex items-center gap-1 font-semibold text-stone-800">
+                            {isBanjang && <span className="text-sm leading-none">👑</span>}
+                            {p.name}
+                            {isBanjang && (
+                              <span className="ml-0.5 text-[10px] font-bold text-amber-600">벙주</span>
+                            )}
+                          </span>
+                        </td>
+                        <td
+                          className={
+                            'py-2 text-right text-sm font-bold ' +
+                            (bal > 0 ? 'text-green-700' : 'text-red-600')
+                          }
+                        >
+                          <span className="flex items-center justify-end gap-1">
+                            {bal > 0
+                              ? `+${formatKRW(bal)} 수령`
+                              : `${formatKRW(Math.abs(bal))} 납부`}
+                            <span
+                              className={
+                                'text-[10px] text-stone-400 transition-transform duration-200 ' +
+                                (isExpanded ? 'rotate-90' : '')
+                              }
+                            >
+                              ▶
+                            </span>
+                          </span>
+                        </td>
+                      </tr>
+                      {isExpanded && breakdown.length > 0 && (
+                        <tr>
+                          <td colSpan={2} className="pb-2 pt-0">
+                            <div className="border-l-4 border-amber-400 bg-amber-100/60 px-3 py-2.5 text-xs">
+                              {breakdown.map((item, i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center justify-between py-1"
+                                >
+                                  <span className="text-stone-600 before:mr-1.5 before:text-stone-400 before:content-['·']">{item.label}</span>
+                                  <span
+                                    className={
+                                      'font-semibold ' +
+                                      (item.amount >= 0 ? 'text-green-700' : 'text-red-600')
+                                    }
+                                  >
+                                    {item.amount >= 0
+                                      ? `+${formatKRW(item.amount)}`
+                                      : `-${formatKRW(Math.abs(item.amount))}`}
+                                  </span>
+                                </div>
+                              ))}
+                              <div className="mt-1 flex items-center justify-between border-t border-amber-300/60 pt-1.5 font-bold">
+                                <span className="text-stone-700">소계</span>
+                                <span
+                                  className={
+                                    'font-extrabold ' +
+                                    (bal > 0 ? 'text-green-700' : 'text-red-600')
+                                  }
+                                >
+                                  {bal > 0
+                                    ? `+${formatKRW(bal)} 수령`
+                                    : `${formatKRW(Math.abs(bal))} 납부`}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   );
                 })}
               </tbody>
@@ -496,83 +656,97 @@ export default function App() {
                 </table>
               </>
             )}
-            {/* 벙주 있을 때: 2단계 경유 정산 */}
+            {/* 벙주 있을 때: 2단계 경유 정산 — 강조 카드 */}
             {banjangData && (
-              <>
-                <p className="mb-1.5 text-xs font-extrabold text-amber-800">
-                  👑 벙주 정산 — {banjangData.banjang.name}
-                </p>
-                {/* 수금 내역 */}
-                {(banjangData.incoming.length > 0 || banjangData.banjangBal < -1) && (
-                  <div className="mb-2">
-                    <p className="mb-1 text-[11px] font-semibold text-blue-600">
-                      📥 수금 내역 (벙주에게 납부)
-                    </p>
-                    <table className="w-full border-collapse text-sm">
-                      <tbody>
-                        {banjangData.incoming.map(({ id, name, amount }) => (
-                          <tr key={id} className="border-b border-blue-100 last:border-0">
-                            <td className="py-1.5 text-stone-800">
-                              {name}
-                              <span className="mx-1.5 font-bold text-blue-400">→</span>
-                              {banjangData.banjang.name} 👑
-                            </td>
-                            <td className="py-1.5 text-right font-extrabold text-blue-700">
-                              {formatKRW(amount)}
-                            </td>
-                          </tr>
-                        ))}
-                        {banjangData.banjangBal < -1 && (
-                          <tr className="border-b border-blue-100 last:border-0">
-                            <td className="py-1.5 text-stone-800">
-                              {banjangData.banjang.name} 👑
-                              <span className="ml-1 text-[11px] text-stone-500">(본인 부담)</span>
-                            </td>
-                            <td className="py-1.5 text-right font-extrabold text-blue-700">
-                              {formatKRW(Math.round(-banjangData.banjangBal))}
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                {/* 지급 내역 */}
-                {(banjangData.outgoing.length > 0 || banjangData.banjangBal > 1) && (
-                  <div>
-                    <p className="mb-1 text-[11px] font-semibold text-purple-600">
-                      📤 지급 내역 (벙주가 전달)
-                    </p>
-                    <table className="w-full border-collapse text-sm">
-                      <tbody>
-                        {banjangData.outgoing.map(({ id, name, amount }) => (
-                          <tr key={id} className="border-b border-purple-100 last:border-0">
-                            <td className="py-1.5 text-stone-800">
-                              {banjangData.banjang.name} 👑
-                              <span className="mx-1.5 font-bold text-purple-400">→</span>
-                              {name}
-                            </td>
-                            <td className="py-1.5 text-right font-extrabold text-purple-700">
-                              {formatKRW(amount)}
-                            </td>
-                          </tr>
-                        ))}
-                        {banjangData.banjangBal > 1 && (
-                          <tr className="border-b border-purple-100 last:border-0">
-                            <td className="py-1.5 text-stone-800">
-                              {banjangData.banjang.name} 👑
-                              <span className="ml-1 text-[11px] text-stone-500">(본인 수령)</span>
-                            </td>
-                            <td className="py-1.5 text-right font-extrabold text-purple-700">
-                              {formatKRW(Math.round(banjangData.banjangBal))}
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
+              <section
+                aria-label={`벙주 정산 — 실제 송금 내역 (${banjangData.banjang.name})`}
+                className="mt-4 overflow-hidden rounded-2xl border-2 border-amber-500 bg-gradient-to-br from-white via-amber-50 to-orange-100 p-4 shadow-lg shadow-amber-300/40 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-400/60"
+              >
+                {/* 카드 헤더 */}
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="flex items-center gap-1.5 text-sm font-extrabold tracking-tight text-amber-900">
+                    <span className="text-base leading-none">👑</span>
+                    벙주 정산 — {banjangData.banjang.name}
+                  </h3>
+                  <span className="rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                    🎯 실제 송금
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {/* 수금 내역 */}
+                  {(banjangData.incoming.length > 0 || banjangData.banjangBal < -1) && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-2.5">
+                      <p className="mb-1.5 text-[11px] font-semibold text-blue-700">
+                        📥 수금 내역 (벙주에게 납부)
+                      </p>
+                      <table className="w-full border-collapse text-sm">
+                        <tbody>
+                          {banjangData.incoming.map(({ id, name, amount }) => (
+                            <tr key={id} className="border-b border-blue-100 last:border-0">
+                              <td className="py-1.5 text-stone-800">
+                                {name}
+                                <span className="mx-1.5 font-bold text-blue-400">→</span>
+                                {banjangData.banjang.name} 👑
+                              </td>
+                              <td className="py-1.5 text-right font-extrabold text-blue-700">
+                                {formatKRW(amount)}
+                              </td>
+                            </tr>
+                          ))}
+                          {banjangData.banjangBal < -1 && (
+                            <tr className="border-b border-blue-100 last:border-0">
+                              <td className="py-1.5 text-stone-800">
+                                {banjangData.banjang.name} 👑
+                                <span className="ml-1 text-[11px] text-stone-500">(본인 부담)</span>
+                              </td>
+                              <td className="py-1.5 text-right font-extrabold text-blue-700">
+                                {formatKRW(Math.round(-banjangData.banjangBal))}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* 지급 내역 */}
+                  {(banjangData.outgoing.length > 0 || banjangData.banjangBal > 1) && (
+                    <div className="rounded-xl border border-purple-200 bg-purple-50/60 px-3 py-2.5">
+                      <p className="mb-1.5 text-[11px] font-semibold text-purple-700">
+                        📤 지급 내역 (벙주가 전달)
+                      </p>
+                      <table className="w-full border-collapse text-sm">
+                        <tbody>
+                          {banjangData.outgoing.map(({ id, name, amount }) => (
+                            <tr key={id} className="border-b border-purple-100 last:border-0">
+                              <td className="py-1.5 text-stone-800">
+                                {banjangData.banjang.name} 👑
+                                <span className="mx-1.5 font-bold text-purple-400">→</span>
+                                {name}
+                              </td>
+                              <td className="py-1.5 text-right font-extrabold text-purple-700">
+                                {formatKRW(amount)}
+                              </td>
+                            </tr>
+                          ))}
+                          {banjangData.banjangBal > 1 && (
+                            <tr className="border-b border-purple-100 last:border-0">
+                              <td className="py-1.5 text-stone-800">
+                                {banjangData.banjang.name} 👑
+                                <span className="ml-1 text-[11px] text-stone-500">(본인 수령)</span>
+                              </td>
+                              <td className="py-1.5 text-right font-extrabold text-purple-700">
+                                {formatKRW(Math.round(banjangData.banjangBal))}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </section>
             )}
           </section>
         )}

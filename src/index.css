@@ -105,6 +105,11 @@ html.dark .text-purple-700 { color: #c084fc; }
 html.dark .text-purple-600 { color: #c084fc; }
 html.dark .text-purple-400 { color: #a78bfa; }
 
+/* green 텍스트 (다크에서 가독성 개선) */
+html.dark .text-green-700 { color: rgb(84 224 137); }
+html.dark .text-green-800 { color: rgb(84 224 137); }
+html.dark .text-green-600 { color: rgb(84 224 137); }
+
 /* red 텍스트 (다크에서 가독성 개선) */
 html.dark .text-red-700 { color: #f87171; }
 html.dark .text-red-600 { color: #fca5a5; }
@@ -154,3 +159,49 @@ html.dark .bg-yellow-300,
 html.dark .bg-yellow-300 * {
   color: #1c1917;
 }
+
+/* ── 벙주 정산 강조 카드 — 다크 모드 ─────────────────────────── */
+
+/* 그라데이션: from-white → 어두운 stone, to-orange-100 → 어두운 amber 틴트 */
+html.dark .from-white {
+  --tw-gradient-from: #1c1917 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgba(28, 25, 23, 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+html.dark .to-orange-100 {
+  --tw-gradient-to: rgba(249, 115, 22, 0.14) var(--tw-gradient-to-position);
+}
+
+/* amber-500 테두리: 다크에서 조금 더 밝게 */
+html.dark .border-amber-500 { border-color: rgba(245, 158, 11, 0.75); }
+
+/* shadow-amber-300/40 → 다크에서 부드러운 글로우 */
+html.dark .shadow-amber-300\/40 {
+  --tw-shadow: 0 4px 18px -2px rgba(252, 211, 77, 0.22), 0 2px 8px -2px rgba(252, 211, 77, 0.14);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+html.dark .hover\:shadow-amber-400\/60:hover {
+  --tw-shadow: 0 8px 28px -4px rgba(251, 191, 36, 0.32), 0 4px 12px -4px rgba(251, 191, 36, 0.22);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+/* 수금 박스 (blue-50/60) → 다크에서 어두운 blue 틴트 */
+html.dark .bg-blue-50\/60 { background-color: rgba(59, 130, 246, 0.12); }
+html.dark .border-blue-200 { border-color: rgba(59, 130, 246, 0.30); }
+
+/* 지급 박스 (purple-50/60) → 다크에서 어두운 purple 틴트 */
+html.dark .bg-purple-50\/60 { background-color: rgba(168, 85, 247, 0.12); }
+
+/* ── 최종 정산 요약 아코디언 세부 패널 — 다크 모드 ─────────────── */
+
+/* 아코디언 항목 구분선 (border-amber-50) → 어둡게 */
+html.dark .border-amber-50 { border-color: rgba(245, 158, 11, 0.15); }
+
+/* 아코디언 열린 행 + 패널 배경 (bg-amber-100/60) → 다크에서 amber 틴트 */
+html.dark .bg-amber-100\/60 { background-color: rgba(245, 158, 11, 0.14); }
+
+/* 아코디언 좌측 액센트 바 (border-amber-400) → 다크에서 살짝 밝게 */
+html.dark .border-amber-400 { border-color: rgba(251, 191, 36, 0.70); }
+
+/* hover 행 강조 (hover:bg-amber-50/50) → 다크에서 amber 틴트 */
+html.dark .hover\:bg-amber-50\/50:hover { background-color: rgba(245, 158, 11, 0.07); }

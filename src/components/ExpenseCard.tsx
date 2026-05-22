@@ -16,10 +16,14 @@ export default function ExpenseCard({
   onChange,
   onRemove,
 }: Props) {
+  const isEven = !expense.splitMode || expense.splitMode === 'even';
   const perPerson =
     expense.sharerIds.length > 0 && expense.amount > 0
-      ? Math.round(expense.amount / expense.sharerIds.length)
+      ? isEven
+        ? Math.round(expense.amount / expense.sharerIds.length)
+        : expense.amount
       : 0;
+  const totalAmount = isEven ? expense.amount : perPerson * expense.sharerIds.length;
 
   const toggleSharer = (id: string) => {
     const next = expense.sharerIds.includes(id)
@@ -41,7 +45,36 @@ export default function ExpenseCard({
   return (
     <article className="rounded-xl bg-white p-4 shadow-sm">
       <header className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-stone-800">🍲 경비 {index + 1}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-stone-800">🍲 경비 {index + 1}</h3>
+          {/* 분할 모드 토글 */}
+          <div className="flex rounded-full border border-stone-200 bg-stone-50 p-0.5 text-[11px]">
+            <button
+              type="button"
+              onClick={() => onChange({ splitMode: 'even' })}
+              className={
+                'rounded-full px-2.5 py-0.5 transition ' +
+                (isEven
+                  ? 'bg-amber-500 font-semibold text-white shadow-sm'
+                  : 'text-stone-500 hover:text-stone-700')
+              }
+            >
+              N빵
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ splitMode: 'perPerson' })}
+              className={
+                'rounded-full px-2.5 py-0.5 transition ' +
+                (!isEven
+                  ? 'bg-amber-500 font-semibold text-white shadow-sm'
+                  : 'text-stone-500 hover:text-stone-700')
+              }
+            >
+              인원추가
+            </button>
+          </div>
+        </div>
         <button
           type="button"
           onClick={onRemove}
@@ -65,7 +98,7 @@ export default function ExpenseCard({
             type="number"
             inputMode="numeric"
             min={0}
-            placeholder="금액"
+            placeholder={isEven ? '총 금액' : '1인당 금액'}
             value={expense.amount === 0 ? '' : expense.amount}
             onChange={(e) => {
               const v = e.target.value === '' ? 0 : Number(e.target.value);
@@ -108,11 +141,11 @@ export default function ExpenseCard({
         )}
       </div>
 
-      {/* 분배 대상 */}
+      {/* 해당 인원 / 분배 대상 */}
       <div className="mb-3">
         <div className="mb-1 flex items-center justify-between">
           <label className="text-xs font-medium text-stone-600">
-            분배 대상{' '}
+            {isEven ? '분배 대상' : '해당 인원'}{' '}
             <span className="text-stone-400">({expense.sharerIds.length}명)</span>
           </label>
           <button
@@ -161,9 +194,16 @@ export default function ExpenseCard({
       {/* 미리보기 배지 */}
       {expense.amount > 0 && expense.sharerIds.length > 0 && (
         <div className="mt-3 flex justify-end">
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-            💰 1인당 {formatKRW(perPerson)} × {expense.sharerIds.length}명
-          </span>
+          {isEven ? (
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              💰 1인당 {formatKRW(perPerson)} × {expense.sharerIds.length}명
+            </span>
+          ) : (
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-800">
+              💰 1인당 {formatKRW(perPerson)} × {expense.sharerIds.length}명 = 총{' '}
+              {formatKRW(totalAmount)}
+            </span>
+          )}
         </div>
       )}
     </article>

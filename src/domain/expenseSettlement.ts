@@ -33,9 +33,11 @@ export function calcExpenseSettlement(
     const sharers = exp.sharerIds.filter(Boolean);
     if (sharers.length === 0 || exp.amount <= 0 || !exp.payerId) continue;
 
-    const perPerson = round(exp.amount / sharers.length);
+    const isEven = !exp.splitMode || exp.splitMode === 'even';
+    const perPerson = isEven ? round(exp.amount / sharers.length) : exp.amount;
+    const effectiveTotal = isEven ? exp.amount : perPerson * sharers.length;
     items.push({ expenseId: exp.id, perPerson, sharerCount: sharers.length });
-    totalAmount += exp.amount;
+    totalAmount += effectiveTotal;
 
     for (const sharerId of sharers) {
       if (sharerId === exp.payerId) continue; // 자기 자신은 송금 불필요

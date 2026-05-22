@@ -76,4 +76,50 @@ describe('calcExpenseSettlement', () => {
     expect(r.totalAmount).toBe(0);
     expect(r.transfers.length).toBe(0);
   });
+
+  it('[인원추가] 1인당 5,000원 × 3명 → 총액 15,000원, 각 5,000원 송금', () => {
+    const participants = [P('a', 'A'), P('b', 'B'), P('c', 'C'), P('d', 'D')];
+    const expenses = [
+      E({
+        id: 'e1',
+        payerId: 'a',
+        sharerIds: ['b', 'c', 'd'],
+        amount: 5000,
+        splitMode: 'perPerson',
+      }),
+    ];
+    const r = calcExpenseSettlement(expenses, participants);
+    expect(r.items[0].perPerson).toBe(5000);
+    expect(r.items[0].sharerCount).toBe(3);
+    expect(r.totalAmount).toBe(15000); // 5000 × 3
+    // b, c, d 각 5000 → a
+    expect(r.transfers.length).toBe(3);
+    r.transfers.forEach((t) => {
+      expect(t.toId).toBe('a');
+      expect(t.amount).toBe(5000);
+    });
+    const receipt = r.payerReceipts.find((x) => x.payerId === 'a')!;
+    expect(receipt.totalReceived).toBe(15000);
+  });
+
+  it('[인원추가] 지불자가 해당 인원 안에 포함되어도 자기 자신 송금 제외', () => {
+    const participants = [P('a', 'A'), P('b', 'B'), P('c', 'C')];
+    const expenses = [
+      E({
+        id: 'e1',
+        payerId: 'a',
+        sharerIds: ['a', 'b', 'c'],
+        amount: 3000,
+        splitMode: 'perPerson',
+      }),
+    ];
+    const r = calcExpenseSettlement(expenses, participants);
+    expect(r.totalAmount).toBe(9000); // 3000 × 3
+    // a는 자기 자신 제외, b·c → a 각 3000
+    const transfers = r.transfers;
+    expect(transfers.length).toBe(2);
+    expect(transfers.every((t) => t.amount === 3000)).toBe(true);
+    const receipt = r.payerReceipts.find((x) => x.payerId === 'a')!;
+    expect(receipt.totalReceived).toBe(6000); // b+c 합산
+  });
 });

@@ -19,7 +19,9 @@ function migrate(raw: Partial<AppState>): AppState {
     meeting: raw.meeting ?? initialState.meeting,
     participants: Array.isArray(raw.participants) ? raw.participants : [],
     vehicles: Array.isArray(raw.vehicles) ? raw.vehicles : [],
-    expenses: Array.isArray(raw.expenses) ? raw.expenses : [],
+    expenses: Array.isArray(raw.expenses)
+      ? (raw.expenses as Expense[]).map((e) => ({ splitMode: 'even' as const, ...e }))
+      : [],
     settings: raw.settings ?? initialState.settings,
   };
 }
@@ -159,6 +161,7 @@ export function useSettlementStore() {
           amount: 0,
           payerId: allParticipantIds[0] ?? '',
           sharerIds: allParticipantIds,
+          splitMode: 'even' as const,
         },
       ],
     }));

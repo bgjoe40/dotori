@@ -69,7 +69,7 @@ export default function RentalResult({ results, participants }: Props) {
                         </span>
                       )}
                     </span>
-                    <span className="font-semibold text-stone-900">
+                    <span className="font-semibold text-stone-800">
                       {formatKRW(o.total)}
                     </span>
                   </li>
@@ -88,15 +88,14 @@ export default function RentalResult({ results, participants }: Props) {
                   className="flex items-center justify-between px-3 py-2 text-sm"
                 >
                   <span className="text-stone-800">{nameOf(d.driverId)}</span>
-                  <span className="font-semibold text-stone-900">
-                    {formatKRW(d.amount)}
+                  <span className="font-semibold text-green-700">
+                    +{formatKRW(d.amount)}
                   </span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
-      ))}
-    </section>
+      ))}    </section>
   );
 }

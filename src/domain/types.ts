@@ -46,12 +46,14 @@ export interface Expense {
   id: ID;
   /** 항목 설명 (예: 저녁식사, 커피) */
   description: string;
-  /** 총 금액(원) */
+  /** 금액(원). even=총액, perPerson=1인당 금액 */
   amount: number;
   /** 지불한 사람 */
   payerId: ID;
-  /** 엔빵할 참가자 목록 (빈 배열이면 계산 제외) */
+  /** 엔빵/인원추가 대상 참가자 목록 (빈 배열이면 계산 제외) */
   sharerIds: ID[];
+  /** 분할 방식: 'even'=N빵(기본, 총액÷인원), 'perPerson'=인원추가(1인당 고정금액) */
+  splitMode?: 'even' | 'perPerson';
   /** 메모 */
   memo?: string;
 }
