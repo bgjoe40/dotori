@@ -118,4 +118,66 @@ describe('calcCarpoolSettlement', () => {
     expect(receipt).toBeDefined();
     expect(receipt.amount).toBe(6000);
   });
+
+  it('불변식 — 탑승자 owed 합계 === driverPayouts 합계 (자금 흐름 균형)', () => {
+    // finalNetBalance 계산 방식: 탑승자 owed 차감 + driverPayouts 가산
+    // 이 두 합계가 일치해야 전체 합산이 0 (카풀 부분만)
+    const participants = [
+      P('d1', 'D1'), P('d2', 'D2'),
+      P('p1', 'P1'), P('p2', 'P2'), P('p3', 'P3'),
+    ];
+    const vehicles: Vehicle[] = [
+      V({ id: 'v1', driverIds: ['d1'], passengerIds: ['p1', 'p2'], distanceKm: 200, tollFee: 5000 }),
+      V({ id: 'v2', driverIds: ['d2'], passengerIds: ['p3'], distanceKm: 150 }),
+    ];
+    const r = calcCarpoolSettlement(vehicles, participants);
+
+    // 탑승자(비운전자)의 owed 합계
+    const passengerOwedSum = r.owed
+      .filter((o) => !o.isDriver)
+      .reduce((s, o) => s + o.total, 0);
+
+    // driverPayouts 합계
+    const driverPayoutSum = r.driverPayouts.reduce((s, d) => s + d.amount, 0);
+
+    expect(passengerOwedSum).toBe(driverPayoutSum);
+  });
+
+  it('2차량 실데이터 — 운전자 순 잔액이 driverPayout과 일치', () => {
+    // 첨부 JSON(5월 24일 가야산)과 동일한 구조로 검증
+    const participants = [
+      P('d1', '조부관'), P('d2', '김은비'),
+      P('p1', '최유진'), P('p2', '박경륜'),
+      P('p3', '김성은'), P('p4', '세응'),
+    ];
+    const vehicles: Vehicle[] = [
+      V({ id: 'v1', driverIds: ['d1'], passengerIds: ['p1', 'p2'], distanceKm: 297, tollFee: 13600 }),
+      V({ id: 'v2', driverIds: ['d2'], passengerIds: ['p3', 'p4'], distanceKm: 325, tollFee: 15000 }),
+    ];
+    const r = calcCarpoolSettlement(vehicles, participants, 170);
+
+    // fuelCost: 297*170+13600=64090, 325*170+15000=70250 → total=134340
+    expect(r.totalFuel).toBe(134340);
+    // laborCost: ceil(297/50)*3000=18000, ceil(325/50)*3000=21000 → total=39000
+    expect(r.totalLabor).toBe(39000);
+    // fuelPerPerson: 134340/6=22390
+    expect(r.fuelPerPerson).toBe(22390);
+    // laborPerPerson: 39000/4=9750
+    expect(r.laborPerPerson).toBe(9750);
+
+    // 운전자 payout
+    const payout1 = r.driverPayouts.find((x) => x.driverId === 'd1')!;
+    const payout2 = r.driverPayouts.find((x) => x.driverId === 'd2')!;
+    // 64090 - 22390 + 18000 = 59700
+    expect(payout1.amount).toBe(59700);
+    // 70250 - 22390 + 21000 = 68860
+    expect(payout2.amount).toBe(68860);
+
+    // 불변식: 탑승자 owed 합계 === driverPayouts 합계
+    const passengerOwedSum = r.owed
+      .filter((o) => !o.isDriver)
+      .reduce((s, o) => s + o.total, 0);
+    const driverPayoutSum = r.driverPayouts.reduce((s, d) => s + d.amount, 0);
+    expect(passengerOwedSum).toBe(driverPayoutSum);
+  });
 });

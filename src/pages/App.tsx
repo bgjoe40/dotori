@@ -102,7 +102,10 @@ export default function App() {
   const finalNetBalance = useMemo(() => {
     const balance = new Map<string, number>();
     const add = (id: string, n: number) => balance.set(id, (balance.get(id) ?? 0) + n);
-    for (const p of carpoolResult.owed) add(p.participantId, -p.total);
+    // 카풀: 탑승자만 owed 차감 (운전자는 driverPayout이 유류비 차감 후 순 지급액이므로 이중 차감 방지)
+    for (const p of carpoolResult.owed) {
+      if (!p.isDriver) add(p.participantId, -p.total);
+    }
     for (const d of carpoolResult.driverPayouts) add(d.driverId, d.amount);
     for (const { result } of rentalResults) {
       for (const p of result.owed) add(p.participantId, -p.total);
@@ -169,7 +172,8 @@ export default function App() {
 
       // 카풀 부담
       const carpoolOwed = carpoolResult.owed.find((o) => o.participantId === p.id);
-      if (carpoolOwed && carpoolOwed.fuelShare > 0) {
+      // 운전자는 driverPayout에 유류비 부담이 이미 차감되어 있으므로 별도 표시 안 함
+      if (carpoolOwed && carpoolOwed.fuelShare > 0 && !carpoolOwed.isDriver) {
         items.push({ label: '🚗 유류비 부담', amount: -carpoolOwed.fuelShare });
       }
       if (carpoolOwed && carpoolOwed.laborShare > 0) {
