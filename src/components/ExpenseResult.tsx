@@ -46,7 +46,7 @@ export default function ExpenseResult({ result, expenses, participants }: Props)
                     {exp.description || '(이름 없음)'}
                     <span
                       className={
-                        'rounded-full px-1.5 py-0.5 text-[10px] font-semibold ' +
+                        'rounded-full px-1.5 py-0.5 text-xs font-semibold ' +
                         (isEven
                           ? 'bg-amber-100 text-amber-700'
                           : 'bg-orange-100 text-orange-700')
@@ -57,12 +57,12 @@ export default function ExpenseResult({ result, expenses, participants }: Props)
                   </span>
                   <span className="text-stone-700">{formatKRW(displayTotal)}</span>
                 </div>
-                <div className="text-[11px] text-stone-500">
+                <div className="text-xs text-stone-500">
                   지불: {nameOf(exp.payerId)} · 1인당 {formatKRW(item.perPerson)} ×{' '}
                   {item.sharerCount}명
                   {exp.memo && ` · ${exp.memo}`}
                 </div>
-                <div className="text-[11px] text-stone-400">
+                <div className="text-xs text-stone-400">
                   참여: {exp.sharerIds.map(nameOf).join(', ')}
                 </div>
               </li>
@@ -105,13 +105,13 @@ export default function ExpenseResult({ result, expenses, participants }: Props)
                     const isEven = !e.splitMode || e.splitMode === 'even';
                     const total = isEven ? e.amount : itemResult.perPerson * itemResult.sharerCount;
                     return (
-                      <li key={e.id} className="flex flex-col text-[11px]">
+                      <li key={e.id} className="flex flex-col text-xs">
                         <div className="flex items-center justify-between text-stone-400">
                           <span>{e.description || '(이름 없음)'}</span>
                           <span>{formatKRW(received)}</span>
                         </div>
                         {isSelfShared && (
-                          <div className="text-[10px] text-stone-500">
+                          <div className="text-xs text-stone-500">
                             총 {formatKRW(total)} − 본인 {formatKRW(itemResult.perPerson)}
                           </div>
                         )}
@@ -122,7 +122,7 @@ export default function ExpenseResult({ result, expenses, participants }: Props)
                 {/* 지출 항목 (다른 사람이 낸 항목 중 본인 몫) */}
                 {owedItems.length > 0 && (
                   <>
-                    <div className="mt-0.5 border-t border-stone-200 pt-0.5 text-[10px] font-semibold text-stone-400">
+                    <div className="mt-0.5 border-t border-stone-200 pt-0.5 text-xs font-semibold text-stone-400">
                       지출 항목
                     </div>
                     <ul className="flex flex-col gap-0.5">
@@ -130,7 +130,7 @@ export default function ExpenseResult({ result, expenses, participants }: Props)
                         const itemResult = result.items.find((i) => i.expenseId === e.id);
                         if (!itemResult) return null;
                         return (
-                          <li key={e.id} className="flex items-center justify-between text-[11px] text-red-400">
+                          <li key={e.id} className="flex items-center justify-between text-xs text-red-400">
                             <span>{e.description || '(이름 없음)'} <span className="text-stone-400">(→ {nameOf(e.payerId)})</span></span>
                             <span>-{formatKRW(itemResult.perPerson)}</span>
                           </li>

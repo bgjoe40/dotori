@@ -132,19 +132,19 @@ export default function GuideModal({ onClose }: GuideModalProps) {
             {sections.map((sec) => (
               <div key={sec.step} className="rounded-xl border border-stone-100 bg-stone-50 px-4 py-3">
                 {/* 섹션 헤더 */}
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[10px] font-extrabold text-white">
+                <div className="mb-2 flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-extrabold text-white shadow-sm">
                     {sec.step}
                   </span>
-                  <h3 className="text-[12px] font-bold text-stone-800">{sec.title}</h3>
+                  <h3 className="text-sm font-bold text-stone-800">{sec.title}</h3>
                 </div>
                 {sec.intro && (
-                  <p className="mb-2 text-[11px] leading-relaxed text-stone-500">{sec.intro}</p>
+                  <p className="mb-2 text-xs leading-relaxed text-stone-500">{sec.intro}</p>
                 )}
                 {/* 항목 목록 */}
                 <ul className="space-y-1.5">
                   {sec.items.map((item) => (
-                    <li key={item.label} className="flex gap-2 text-[11px] leading-relaxed">
+                    <li key={item.label} className="flex gap-2 text-xs leading-relaxed">
                       <span className="mt-0.5 shrink-0 font-semibold text-stone-700">{item.label}</span>
                       <span className="text-stone-400">—</span>
                       <span className="text-stone-500">{item.desc}</span>
@@ -152,7 +152,7 @@ export default function GuideModal({ onClose }: GuideModalProps) {
                   ))}
                 </ul>
                 {sec.note && (
-                  <div className="mt-2 rounded-lg bg-amber-50 px-3 py-1.5 text-[10px] leading-relaxed text-amber-700 whitespace-pre-line">
+                  <div className="mt-2 rounded-lg bg-amber-50 px-3 py-1.5 text-xs leading-relaxed text-amber-700 whitespace-pre-line">
                     💡 {sec.note}
                   </div>
                 )}
@@ -163,7 +163,7 @@ export default function GuideModal({ onClose }: GuideModalProps) {
 
         {/* 푸터 */}
         <div className="border-t border-stone-100 px-5 py-2.5">
-          <p className="text-center text-[10px] text-stone-400">
+          <p className="text-center text-xs text-stone-400">
             🌰 도토리 산행 정산 · 데이터는 내 브라우저에만 저장됩니다
           </p>
         </div>

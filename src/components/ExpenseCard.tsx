@@ -48,7 +48,7 @@ export default function ExpenseCard({
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-stone-800">🍲 경비 {index + 1}</h3>
           {/* 분할 모드 토글 */}
-          <div className="flex rounded-full border border-stone-200 bg-stone-50 p-0.5 text-[11px]">
+          <div className="flex rounded-full border border-stone-200 bg-stone-50 p-0.5 text-xs">
             <button
               type="button"
               onClick={() => onChange({ splitMode: 'even' })}
@@ -151,7 +151,7 @@ export default function ExpenseCard({
           <button
             type="button"
             onClick={toggleAll}
-            className="text-[11px] text-amber-700 hover:underline"
+            className="text-xs text-amber-700 hover:underline"
           >
             {allSelected ? '전체 해제' : '전체 선택'}
           </button>

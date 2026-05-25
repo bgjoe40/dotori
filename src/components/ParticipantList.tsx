@@ -19,6 +19,7 @@ export default function ParticipantList({
   onSetBanjang,
 }: Props) {
   const [name, setName] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const submit = () => {
     if (!name.trim()) return;
@@ -29,6 +30,7 @@ export default function ParticipantList({
   return (
     <section className="rounded-xl bg-white p-4 shadow-sm">
       <h2 className="mb-3 text-base font-semibold text-stone-800">
+        <span className="mr-1.5 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">02</span>
         👥 참가자 명단
         <span className="ml-2 text-xs font-normal text-stone-500">
           {participants.length}명
@@ -94,7 +96,7 @@ export default function ParticipantList({
                     {p.name}
                   </span>
                   {isBanjang && (
-                    <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="rounded-full bg-amber-400 px-2 py-0.5 text-xs font-bold text-white">
                       벙주
                     </span>
                   )}
@@ -121,17 +123,37 @@ export default function ParticipantList({
                     카풀
                   </label>
                   {!p.isCarpool && (
-                    <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
                       개인참석
                     </span>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => onRemove(p.id)}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    삭제
-                  </button>
+                  {confirmDeleteId === p.id ? (
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-xs text-stone-500">삭제할까요?</span>
+                      <button
+                        type="button"
+                        onClick={() => { onRemove(p.id); setConfirmDeleteId(null); }}
+                        className="text-xs font-bold text-red-600 hover:underline"
+                      >
+                        확인
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="text-xs text-stone-500 hover:underline"
+                      >
+                        취소
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(p.id)}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      삭제
+                    </button>
+                  )}
                 </div>
               </li>
             );

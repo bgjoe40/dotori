@@ -11,8 +11,16 @@ body,
 body {
   position: relative;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
-    'Malgun Gothic', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+/* 접근성: 키보드 포커스 시 시각적 링 표시 */
+:focus-visible {
+  outline: 2px solid #d97706 !important; /* amber-600 */
+  outline-offset: 2px !important;
+  border-radius: 4px;
 }
 
 /* ── 도토리 비 애니메이션 (사선 낙하: 우측 위 → 좌측 아래) ─────── */
@@ -41,6 +49,13 @@ body {
   z-index: -1;
   animation: acornFall linear infinite;
   will-change: transform, opacity;
+}
+
+/* 접근성: 애니메이션 감소 설정 시 도토리 비 비활성화 */
+@media (prefers-reduced-motion: reduce) {
+  .acorn {
+    display: none;
+  }
 }
 
 /* ── 라이트 테마 기본 (body 배경) ─────────────────────────────── */

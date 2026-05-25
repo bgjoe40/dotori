@@ -19,20 +19,20 @@ export default function CarpoolResult({ result, vehicles, participants, fuelRate
       {/* 1인당 요약 카드 */}
       <div className="grid grid-cols-2 gap-3 text-center">
         <div className="rounded-lg bg-red-50 p-3">
-          <div className="text-[11px] text-red-700">� 유류비 1인당</div>
+          <div className="text-xs text-red-700">� 유류비 1인당</div>
           <div className="mt-1 text-lg font-bold text-red-700">
             {formatKRW(result.fuelPerPerson)}
           </div>
-          <div className="text-[10px] text-red-600">
+          <div className="text-xs text-red-600">
             ÷ {result.fuelHeadcount}명 (운전자+탑승자)
           </div>
         </div>
         <div className="rounded-lg bg-amber-50 p-3">
-          <div className="text-[11px] text-amber-700">⚫ 수고비 1인당</div>
+          <div className="text-xs text-amber-700">⚫ 수고비 1인당</div>
           <div className="mt-1 text-lg font-bold text-amber-700">
             {formatKRW(result.laborPerPerson)}
           </div>
-          <div className="text-[10px] text-amber-600">
+          <div className="text-xs text-amber-600">
             ÷ {result.laborHeadcount}명 (탑승자만)
           </div>
         </div>
@@ -54,13 +54,13 @@ export default function CarpoolResult({ result, vehicles, participants, fuelRate
                 <div className="flex items-center justify-between">
                   <span className="text-stone-700">
                     차량 {idx + 1}{' '}
-                    <span className="text-[11px] text-stone-500">
+                    <span className="text-xs text-stone-500">
                       ({drivers}, {v.distanceKm}km)
                     </span>
                   </span>
                   <span className="font-semibold text-red-700">{formatKRW(r.fuelCost)}</span>
                 </div>
-                <div className="text-[11px] text-stone-400">
+                <div className="text-xs text-stone-400">
                   {v.distanceKm}km × {fuelRatePerKm}원 = {formatKRW(distCost)}
                   {v.tollFee > 0 && ` + 톨비 ${formatKRW(v.tollFee)}`}
                   {v.parkingFee > 0 && ` + 주차비 ${formatKRW(v.parkingFee)}`}
@@ -94,7 +94,7 @@ export default function CarpoolResult({ result, vehicles, participants, fuelRate
               >
                 <span className="text-stone-700">
                   차량 {idx + 1}{' '}
-                  <span className="text-[11px] text-stone-500">
+                  <span className="text-xs text-stone-500">
                     (운전자: {drivers})
                   </span>
                 </span>

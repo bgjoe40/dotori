@@ -103,7 +103,7 @@ export default function VehicleCard({
         <h3 className="text-sm font-semibold text-stone-800">
           🚙 차량 {index + 1}
           {mode === 'rental' && (
-            <span className="ml-2 rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
+            <span className="ml-2 rounded-md bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">
               렌트
             </span>
           )}

@@ -22,20 +22,20 @@ export default function RentalResult({ results, participants }: Props) {
 
           <div className="grid grid-cols-2 gap-3 text-center">
             <div className="rounded-lg bg-purple-50 p-3">
-              <div className="text-[11px] text-purple-700">1인당 렌트비</div>
+              <div className="text-xs text-purple-700">1인당 렌트비</div>
               <div className="mt-1 text-lg font-bold text-purple-700">
                 {formatKRW(r.rentalPerPerson)}
               </div>
-              <div className="text-[10px] text-purple-600">
+              <div className="text-xs text-purple-600">
                 ÷ {r.totalHeadcount}명
               </div>
             </div>
             <div className="rounded-lg bg-amber-50 p-3">
-              <div className="text-[11px] text-amber-700">1인당 수고비</div>
+              <div className="text-xs text-amber-700">1인당 수고비</div>
               <div className="mt-1 text-lg font-bold text-amber-700">
                 {formatKRW(r.laborPerPassenger)}
               </div>
-              <div className="text-[10px] text-amber-600">
+              <div className="text-xs text-amber-600">
                 탑승자 {v.passengerIds.length}명
               </div>
             </div>
@@ -56,7 +56,7 @@ export default function RentalResult({ results, participants }: Props) {
                     <span className="text-stone-800">
                       {nameOf(o.participantId)}
                       {o.isDriver && (
-                        <span className="ml-1 text-[10px] text-purple-700">
+                        <span className="ml-1 text-xs text-purple-700">
                           (운전자)
                         </span>
                       )}

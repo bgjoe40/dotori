@@ -334,7 +334,10 @@ export default function App() {
 
       {/* 모임 정보 */}
       <section className="mb-4 rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-base font-semibold text-stone-800">📅 모임 정보</h2>
+        <h2 className="mb-3 text-base font-semibold text-stone-800">
+          <span className="mr-1.5 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">01</span>
+          📅 모임 정보
+        </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_auto]">
           <input
             type="text"
@@ -367,7 +370,7 @@ export default function App() {
             </span>
           </div>
         </div>
-        <p className="mt-1 text-[11px] text-stone-400">
+        <p className="mt-1 text-xs text-stone-400">
           🔴 유류비 단가 기본값 {FUEL_RATE_PER_KM}원/km — 차량 연비에 따라 조정 가능
         </p>
       </section>
@@ -384,6 +387,11 @@ export default function App() {
         />
       </div>
 
+      {/* 주제 서비스 입력용 탭 */}
+      <div className="mb-1.5 flex items-center gap-2">
+        <span className="rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">03</span>
+        <span className="text-base font-semibold text-stone-800">비용 입력</span>
+      </div>
       {/* 탭 + 콘텐츠 (같은 배경) */}
       <div className={`mb-4 overflow-hidden rounded-2xl ${
         tab === 'carpool' ? 'bg-green-100' : tab === 'expense' ? 'bg-amber-100' : 'bg-purple-100'
@@ -392,11 +400,11 @@ export default function App() {
           <TabButton active={tab === 'carpool'} activeClass="bg-green-600 text-white shadow" onClick={() => setTab('carpool')}>
             🚙 카풀
           </TabButton>
-          <TabButton active={tab === 'expense'} activeClass="bg-amber-500 text-white shadow" onClick={() => setTab('expense')}>
-            🍲 경비
-          </TabButton>
           <TabButton active={tab === 'rental'} activeClass="bg-purple-600 text-white shadow" onClick={() => setTab('rental')}>
             🚐 렌트
+          </TabButton>
+          <TabButton active={tab === 'expense'} activeClass="bg-amber-500 text-white shadow" onClick={() => setTab('expense')}>
+            🍲 경비
           </TabButton>
         </div>
 
@@ -502,11 +510,11 @@ export default function App() {
       {state.participants.length > 0 &&
         (carpoolVehicles.length > 0 || rentalVehicles.length > 0 || state.expenses.length > 0) && (
           <section className="relative z-10 mb-4 overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4 shadow-lg shadow-amber-100">
-            {/* 벙주 미선택 경고 */}
+            {/* 벙주 미선택 안내 */}
             {!banjangId && (
-              <div className="mb-3 flex items-center gap-2 rounded-xl border-2 border-red-400 bg-red-50 px-4 py-3">
-                <span className="text-lg leading-none">⚠️</span>
-                <p className="text-sm font-bold text-red-700">벙주를 반드시 선택해주세요.</p>
+              <div className="mb-3 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+                <span className="text-lg leading-none">ℹ️</span>
+                <p className="text-sm text-amber-700">벙주를 선택하면 2단계 정산 방식이 적용됩니다.</p>
               </div>
             )}
             {/* 배경 도토리 워터마크 */}
@@ -517,9 +525,10 @@ export default function App() {
               🌰
             </span>
             <h2 className="mb-1 text-base font-extrabold tracking-tight text-amber-900">
+              <span className="mr-1.5 rounded bg-amber-200 px-1.5 py-0.5 text-xs font-bold text-amber-700">04</span>
               📊 최종 정산 요약
             </h2>
-            <p className="mb-3 text-[11px] text-amber-700/70">카풀 · 렌트 · 경비 통합 기준</p>
+            <p className="mb-3 text-xs text-amber-700/70">카풀 · 렌트 · 경비 통합 기준</p>
 
             {/* 모임 요약 카드 */}
             <div className="mb-3 rounded-xl border border-amber-200 bg-white/60 px-3 py-2.5">
@@ -533,7 +542,7 @@ export default function App() {
                   )}
                 </div>
               )}
-              <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-stone-600">
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-600">
                 <span>👥 참가자 {state.participants.length}명</span>
                 {banjangId && (
                   <span>👑 벙주: {state.participants.find((p) => p.id === banjangId)?.name}</span>
@@ -543,7 +552,7 @@ export default function App() {
                 {state.expenses.length > 0 && <span>🧾 경비 {state.expenses.length}건</span>}
               </div>
               <div className="mt-2 flex items-center justify-between border-t border-amber-100 pt-2">
-                <span className="text-[11px] text-stone-500">총 정산 금액</span>
+                <span className="text-xs text-stone-500">완 정산 금액</span>
                 <span className="text-sm font-extrabold text-amber-900">
                   {formatKRW(
                     [...finalNetBalance.values()]
@@ -588,7 +597,7 @@ export default function App() {
                             {isBanjang && <span className="text-sm leading-none">👑</span>}
                             {p.name}
                             {isBanjang && (
-                              <span className="ml-0.5 text-[10px] font-bold text-amber-600">벙주</span>
+                              <span className="ml-0.5 text-xs font-bold text-amber-600">뱙주</span>
                             )}
                           </span>
                         </td>
@@ -604,7 +613,7 @@ export default function App() {
                               : `${formatKRW(Math.abs(bal))} 납부`}
                             <span
                               className={
-                                'text-[10px] text-stone-400 transition-transform duration-200 ' +
+                                'text-xs text-stone-400 transition-transform duration-200 ' +
                                 (isExpanded ? 'rotate-90' : '')
                               }
                             >
@@ -687,7 +696,7 @@ export default function App() {
             {banjangData && (
               <section
                 aria-label={`벙주 정산 — 실제 송금 내역 (${banjangData.banjang.name})`}
-                className="mt-4 overflow-hidden rounded-2xl border-2 border-amber-500 bg-gradient-to-br from-white via-amber-50 to-orange-100 p-4 shadow-lg shadow-amber-300/40 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-400/60"
+                className="mt-4 overflow-hidden rounded-2xl border-2 border-amber-500 bg-gradient-to-br from-white via-amber-50 to-orange-100 p-4 shadow-lg shadow-amber-300/40 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-amber-400/60 active:-translate-y-0.5 active:shadow-xl active:shadow-amber-400/60"
               >
                 {/* 카드 헤더 */}
                 <div className="mb-3 flex items-center justify-between">
@@ -695,7 +704,7 @@ export default function App() {
                     <span className="text-base leading-none">👑</span>
                     벙주 정산 — {banjangData.banjang.name}
                   </h3>
-                  <span className="rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                  <span className="rounded-full bg-amber-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
                     🎯 실제 송금
                   </span>
                 </div>
@@ -704,7 +713,7 @@ export default function App() {
                   {/* 수금 내역 */}
                   {(banjangData.incoming.length > 0 || banjangData.banjangBal < -1) && (
                     <div className="rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-2.5">
-                      <p className="mb-1.5 text-[11px] font-semibold text-blue-700">
+                      <p className="mb-1.5 text-xs font-semibold text-blue-700">
                         📥 수금 내역 (벙주에게 납부)
                       </p>
                       <table className="w-full border-collapse text-sm">
@@ -725,7 +734,7 @@ export default function App() {
                             <tr className="border-b border-blue-100 last:border-0">
                               <td className="py-1.5 text-stone-800">
                                 {banjangData.banjang.name} 👑
-                                <span className="ml-1 text-[11px] text-stone-500">(본인 부담)</span>
+                                <span className="ml-1 text-xs text-stone-500">(본인 부담)</span>
                               </td>
                               <td className="py-1.5 text-right font-extrabold text-blue-700">
                                 {formatKRW(Math.round(-banjangData.banjangBal))}
@@ -740,7 +749,7 @@ export default function App() {
                   {/* 지급 내역 */}
                   {(banjangData.outgoing.length > 0 || banjangData.banjangBal > 1) && (
                     <div className="rounded-xl border border-purple-200 bg-purple-50/60 px-3 py-2.5">
-                      <p className="mb-1.5 text-[11px] font-semibold text-purple-700">
+                      <p className="mb-1.5 text-xs font-semibold text-purple-700">
                         📤 지급 내역 (벙주가 전달)
                       </p>
                       <table className="w-full border-collapse text-sm">
@@ -761,7 +770,7 @@ export default function App() {
                             <tr className="border-b border-purple-100 last:border-0">
                               <td className="py-1.5 text-stone-800">
                                 {banjangData.banjang.name} 👑
-                                <span className="ml-1 text-[11px] text-stone-500">(본인 수령)</span>
+                                <span className="ml-1 text-xs text-stone-500">(본인 수령)</span>
                               </td>
                               <td className="py-1.5 text-right font-extrabold text-purple-700">
                                 {formatKRW(Math.round(banjangData.banjangBal))}
@@ -814,12 +823,12 @@ export default function App() {
             전체 초기화
           </button>
         </div>
-        <p className="mt-3 text-[11px] text-stone-400">
+        <p className="mt-3 text-xs text-stone-400">
           입력 데이터는 브라우저에 자동 저장됩니다. (DB 미사용)
         </p>
       </section>
 
-      <footer className="mt-8 space-y-1 text-center text-[10px] text-stone-400">
+      <footer className="mt-8 space-y-1 text-center text-xs text-stone-400">
         <p>⚠ 첫 탑승자 픽업지 기준 왕복거리 입력 · 편도 탑승자도 왕복 동일 기준 · 1원 단위 반올림</p>
         <p>🌰 도토리 산행 정산 v1.0.3 · 2026-05-23</p>
       </footer>
