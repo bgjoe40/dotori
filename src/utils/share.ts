@@ -32,7 +32,7 @@ export function buildCarpoolShareText(
     const r = result.vehicles.find((x) => x.vehicleId === v.id);
     if (!r) return;
     const drivers = v.driverIds.map((id) => nameOf(id, participants)).join('·') || '?';
-    const distCost = v.distanceKm * fuelRatePerKm;
+    const distCost = Math.round(v.distanceKm * fuelRatePerKm);
     let detail = `${v.distanceKm}km × ${fuelRatePerKm}원 = ${formatKRW(distCost)}`;
     if (v.tollFee > 0) detail += ` + 톨비 ${formatKRW(v.tollFee)}`;
     if (v.parkingFee > 0) detail += ` + 주차비 ${formatKRW(v.parkingFee)}`;

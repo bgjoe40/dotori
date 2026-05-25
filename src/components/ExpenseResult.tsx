@@ -99,11 +99,11 @@ export default function ExpenseResult({ result, expenses, participants }: Props)
                   {paidItems.map((e) => {
                     const itemResult = result.items.find((i) => i.expenseId === e.id);
                     if (!itemResult) return null;
+                    const isSelfShared = e.sharerIds.includes(r.payerId);
+                    const nonSelfCount = itemResult.sharerCount - (isSelfShared ? 1 : 0);
+                    const received = itemResult.perPerson * nonSelfCount;
                     const isEven = !e.splitMode || e.splitMode === 'even';
                     const total = isEven ? e.amount : itemResult.perPerson * itemResult.sharerCount;
-                    const isSelfShared = e.sharerIds.includes(r.payerId);
-                    const selfShare = isSelfShared ? itemResult.perPerson : 0;
-                    const received = total - selfShare;
                     return (
                       <li key={e.id} className="flex flex-col text-[11px]">
                         <div className="flex items-center justify-between text-stone-400">
@@ -112,7 +112,7 @@ export default function ExpenseResult({ result, expenses, participants }: Props)
                         </div>
                         {isSelfShared && (
                           <div className="text-[10px] text-stone-500">
-                            총 {formatKRW(total)} − 본인 {formatKRW(selfShare)}
+                            총 {formatKRW(total)} − 본인 {formatKRW(itemResult.perPerson)}
                           </div>
                         )}
                       </li>

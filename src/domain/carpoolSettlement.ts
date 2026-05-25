@@ -100,12 +100,15 @@ export function calcCarpoolSettlement(
     // 운전자가 부담하는 유류비 엔빵(1인분) — 차량당 운전자 수만큼 차감
     const driverFuelShareSum = fuelPerPerson * drivers.length;
     const totalPayout = r.fuelCost - driverFuelShareSum + r.laborCost;
-    const perDriver = round(totalPayout / drivers.length);
-    drivers.forEach((did) => {
-      driverPayouts.push({ driverId: did, vehicleId: v.id, amount: perDriver });
+    const basePerDriver = round(totalPayout / drivers.length);
+    let remainingPayout = totalPayout;
+    drivers.forEach((did, i) => {
+      const amount = i === drivers.length - 1 ? remainingPayout : basePerDriver;
+      remainingPayout -= basePerDriver;
+      driverPayouts.push({ driverId: did, vehicleId: v.id, amount });
     });
     // r.driverPayout는 1인분 표시용
-    r.driverPayout = perDriver;
+    r.driverPayout = basePerDriver;
   }
 
   // 운전자별 수고비 수령 합계
