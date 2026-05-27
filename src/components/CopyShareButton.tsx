@@ -34,7 +34,7 @@ export default function CopyShareButton({ text, label = '텍스트로 복사' }:
       type="button"
       onClick={handleCopy}
       disabled={!text}
-      className="w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-bold text-stone-800 shadow-sm hover:bg-amber-500 disabled:opacity-40"
+      className="min-h-11 w-full rounded-lg bg-amber-400 px-4 py-3 text-sm font-bold text-stone-800 shadow-sm hover:bg-amber-500 disabled:opacity-40"
     >
       {copied ? '✅ 복사 완료!' : `📋 ${label}`}
     </button>

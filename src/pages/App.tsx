@@ -18,13 +18,18 @@ import { buildCarpoolShareText, buildRentalShareText, buildExpenseShareText, bui
 import { formatKRW } from '../utils/format';
 
 type Tab = 'carpool' | 'rental' | 'expense';
+type Step = 1 | 2 | 3 | 4;
 
 export default function App() {
   const store = useSettlementStore();
   const [tab, setTab] = useState<Tab>('carpool');
+  const [activeStep, setActiveStep] = useState<Step>(1);
   const [showGuide, setShowGuide] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [shareMode, setShareMode] = useState<'summary' | 'detail'>('summary');
+  const [barCopied, setBarCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const summaryRef = useRef<HTMLElement>(null);
 
   // ── 테마 (다크/라이트) ─────────────────────────────────────────
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -257,6 +262,35 @@ export default function App() {
     return parts.join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
   }, [carpoolShareText, rentalShareText, expenseShareText, carpoolVehicles.length, rentalVehicles.length, state.expenses.length, state.meeting.name, state.meeting.date, state.participants, banjangId, finalNetBalance, finalTransfers, participantBreakdown, banjangData]);
 
+  const hasSettlementData =
+    state.participants.length > 0 &&
+    (carpoolVehicles.length > 0 || rentalVehicles.length > 0 || state.expenses.length > 0);
+
+  const summaryShareText = useMemo(() => {
+    const debtors = [...finalNetBalance.entries()]
+      .filter(([, bal]) => bal < -1)
+      .map(([id, bal]) => ({
+        id,
+        name: state.participants.find((p) => p.id === id)?.name ?? '?',
+        amount: Math.round(-bal),
+      }));
+    const creditors = [...finalNetBalance.entries()]
+      .filter(([, bal]) => bal > 1)
+      .map(([id, bal]) => ({
+        id,
+        name: state.participants.find((p) => p.id === id)?.name ?? '?',
+        amount: Math.round(bal),
+      }));
+    const lines = [
+      `📌 ${state.meeting.name || '도토리 산행 정산'} 요약`,
+      state.meeting.date ? `일자: ${state.meeting.date}` : '',
+      `참가자: ${state.participants.length}명`,
+      debtors.length > 0 ? `납부: ${debtors.map((d) => `${d.name} ${formatKRW(d.amount)}`).join(', ')}` : '납부 없음',
+      creditors.length > 0 ? `수령: ${creditors.map((c) => `${c.name} ${formatKRW(c.amount)}`).join(', ')}` : '수령 없음',
+    ].filter(Boolean);
+    return lines.join('\n');
+  }, [finalNetBalance, state.participants, state.meeting.name, state.meeting.date]);
+
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -297,16 +331,51 @@ export default function App() {
     }
   };
 
+  const goToSummary = () => {
+    setActiveStep(4);
+    summaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const addCurrentItem = () => {
+    if (tab === 'expense') {
+      store.addExpense(state.participants.map((p) => p.id));
+      return;
+    }
+    store.addVehicle(tab === 'rental');
+  };
+
+  const handleCopyFromBar = async () => {
+    const text = shareMode === 'summary' ? summaryShareText : combinedShareText;
+    if (!text) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setBarCopied(true);
+      setTimeout(() => setBarCopied(false), 1500);
+    } catch {
+      alert('복사에 실패했습니다. 수동으로 선택해 복사해 주세요.');
+    }
+  };
+
   return (
-    <div className="relative mx-auto min-h-screen max-w-2xl px-4 pb-24 pt-6">
+    <div className="relative mx-auto min-h-screen max-w-2xl px-4 pb-36 pt-6">
       <SkyBackground />
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
       <AcornRain />
-      {/* 헤더 */}
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-stone-900">🌰 도토리 산행 정산</h1>
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="mt-1 text-sm text-stone-500">
             유류비 + 수고비 + 추가 경비를 자동 계산하여 엔빵 정산해 드려요.
           </p>
         </div>
@@ -316,7 +385,7 @@ export default function App() {
             onClick={() => setShowGuide(true)}
             aria-label="사용 가이드 열기"
             title="사용 가이드"
-            className="rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm shadow-sm hover:border-amber-400"
+            className="min-h-11 rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm shadow-sm hover:border-amber-400"
           >
             📖
           </button>
@@ -325,58 +394,88 @@ export default function App() {
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
             title={theme === 'dark' ? '라이트 모드' : '다크 모드'}
-            className="rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm shadow-sm hover:border-amber-400"
+            className="min-h-11 rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm shadow-sm hover:border-amber-400"
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </div>
       </header>
 
-      {/* 모임 정보 */}
-      <section className="mb-4 rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-base font-semibold text-stone-800">
-          <span className="mr-1.5 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">01</span>
-          📅 모임 정보
-        </h2>
+      <StepSection
+        step={1}
+        title="📅 모임 정보"
+        activeStep={activeStep}
+        onOpen={() => setActiveStep(1)}
+      >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_auto]">
           <input
             type="text"
             placeholder="모임 이름 (예: 5월 북한산 벙)"
             value={state.meeting.name}
             onChange={(e) => store.setMeeting({ name: e.target.value })}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+            className="min-h-11 rounded-lg border border-stone-300 px-3 py-2 text-base focus:border-green-500 focus:outline-none"
           />
           <input
             type="date"
             value={state.meeting.date}
             onChange={(e) => store.setMeeting({ date: e.target.value })}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+            className="min-h-11 rounded-lg border border-stone-300 px-3 py-2 text-base focus:border-green-500 focus:outline-none"
           />
           <div className="relative">
             <input
               type="number"
               inputMode="numeric"
               min={1}
-              value={fuelRate === FUEL_RATE_PER_KM && fuelRate === 170 ? fuelRate : fuelRate}
+              value={fuelRate}
               onChange={(e) => {
                 const v = Number(e.target.value);
                 store.setFuelRate(Number.isNaN(v) ? FUEL_RATE_PER_KM : v);
               }}
-              className="w-28 rounded-lg border border-red-300 px-3 py-2 pr-14 text-sm focus:border-red-500 focus:outline-none"
+              className="min-h-11 w-32 rounded-lg border border-red-300 px-3 py-2 pr-14 text-base focus:border-red-500 focus:outline-none"
               title="유류비 km당 단가"
             />
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-500">
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-red-500">
               원/km
             </span>
           </div>
         </div>
-        <p className="mt-1 text-xs text-stone-400">
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {[150, 170, 190, 210].map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => store.setFuelRate(preset)}
+              className={
+                'min-h-9 rounded-full border px-2.5 text-xs transition ' +
+                (fuelRate === preset
+                  ? 'border-red-500 bg-red-500 text-white'
+                  : 'border-red-200 bg-white text-red-600 hover:border-red-400')
+              }
+            >
+              {preset}원
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-sm text-stone-500">
           🔴 유류비 단가 기본값 {FUEL_RATE_PER_KM}원/km — 차량 연비에 따라 조정 가능
         </p>
-      </section>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setActiveStep(2)}
+            className="min-h-11 rounded-lg bg-green-600 px-4 text-sm font-semibold text-white hover:bg-green-700"
+          >
+            다음: 참가자
+          </button>
+        </div>
+      </StepSection>
 
-      {/* 참가자 */}
-      <div className="mb-4">
+      <StepSection
+        step={2}
+        title="👥 참가자 명단"
+        activeStep={activeStep}
+        onOpen={() => setActiveStep(2)}
+      >
         <ParticipantList
           participants={state.participants}
           banjangId={banjangId}
@@ -385,131 +484,155 @@ export default function App() {
           onRemove={store.removeParticipant}
           onSetBanjang={store.setBanjang}
         />
-      </div>
-
-      {/* 주제 서비스 입력용 탭 */}
-      <div className="mb-1.5 flex items-center gap-2">
-        <span className="rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">03</span>
-        <span className="text-base font-semibold text-stone-800">비용 입력</span>
-      </div>
-      {/* 탭 + 콘텐츠 (같은 배경) */}
-      <div className={`mb-4 overflow-hidden rounded-2xl ${
-        tab === 'carpool' ? 'bg-green-100' : tab === 'expense' ? 'bg-amber-100' : 'bg-purple-100'
-      }`}>
-        <div className="flex gap-1 p-1">
-          <TabButton active={tab === 'carpool'} activeClass="bg-green-600 text-white shadow" onClick={() => setTab('carpool')}>
-            🚙 카풀
-          </TabButton>
-          <TabButton active={tab === 'rental'} activeClass="bg-purple-600 text-white shadow" onClick={() => setTab('rental')}>
-            🚐 렌트
-          </TabButton>
-          <TabButton active={tab === 'expense'} activeClass="bg-amber-500 text-white shadow" onClick={() => setTab('expense')}>
-            🍲 경비
-          </TabButton>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setActiveStep(3)}
+            className="min-h-11 rounded-lg bg-green-600 px-4 text-sm font-semibold text-white hover:bg-green-700"
+          >
+            다음: 비용 입력
+          </button>
         </div>
+      </StepSection>
 
-        <div className="px-2 pb-2 pt-1">
-          {tab === 'expense' ? (
-            <>
-              <div className="mb-3 space-y-3">
-                {state.expenses.map((exp, idx) => (
-                  <ExpenseCard
-                    key={exp.id}
-                    expense={exp}
-                    participants={state.participants}
-                    index={idx}
-                    onChange={(patch) => store.updateExpense(exp.id, patch)}
-                    onRemove={() => store.removeExpense(exp.id)}
-                  />
-                ))}
-                <button
-                  type="button"
-                  onClick={() => store.addExpense(state.participants.map((p) => p.id))}
-                  className="w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-amber-500 hover:text-amber-700"
-                >
-                  + 경비 항목 추가
-                </button>
-              </div>
-              {state.expenses.length > 0 && (
-                <ExpenseResult
-                  result={expenseResult}
-                  expenses={state.expenses}
-                  participants={state.participants}
-                />
-              )}
-              {state.expenses.length === 0 && (
-                <p className="mt-3 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 py-6 text-center text-sm text-amber-700">
-                  경비 항목을 추가하면 정산 결과가 표시됩니다.
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="mb-3 space-y-3">
-                {(tab === 'carpool' ? carpoolVehicles : rentalVehicles).map((v, idx) => {
-                  const occupiedIds =
-                    tab === 'carpool'
-                      ? carpoolVehicles
-                          .filter((other) => other.id !== v.id)
-                          .flatMap((other) => [...other.driverIds, ...other.passengerIds])
-                      : [];
-                  return (
-                    <VehicleCard
-                      key={v.id}
-                      vehicle={v}
+      <StepSection
+        step={3}
+        title="💳 비용 입력"
+        activeStep={activeStep}
+        onOpen={() => setActiveStep(3)}
+      >
+        <div
+          className={`mb-4 overflow-hidden rounded-2xl ${
+            tab === 'carpool' ? 'bg-green-100' : tab === 'expense' ? 'bg-amber-100' : 'bg-purple-100'
+          }`}
+        >
+          <div className="sticky top-2 z-20 border-b border-stone-200/70 bg-white/80 p-1 backdrop-blur-sm">
+            <div className="flex gap-1">
+              <TabButton active={tab === 'carpool'} activeClass="bg-green-600 text-white shadow" onClick={() => setTab('carpool')}>
+                🚙 카풀
+              </TabButton>
+              <TabButton active={tab === 'rental'} activeClass="bg-purple-600 text-white shadow" onClick={() => setTab('rental')}>
+                🚐 렌트
+              </TabButton>
+              <TabButton active={tab === 'expense'} activeClass="bg-amber-500 text-white shadow" onClick={() => setTab('expense')}>
+                🍲 경비
+              </TabButton>
+            </div>
+          </div>
+          <div className="px-2 pb-2 pt-1">
+            {tab === 'expense' ? (
+              <>
+                <div className="mb-3 space-y-3">
+                  {state.expenses.map((exp, idx) => (
+                    <ExpenseCard
+                      key={exp.id}
+                      expense={exp}
                       participants={state.participants}
-                      mode={tab as 'carpool' | 'rental'}
                       index={idx}
-                      fuelRatePerKm={fuelRate}
-                      occupiedIds={occupiedIds}
-                      onChange={(patch) => store.updateVehicle(v.id, patch)}
-                      onRemove={() => store.removeVehicle(v.id)}
+                      onChange={(patch) => store.updateExpense(exp.id, patch)}
+                      onRemove={() => store.removeExpense(exp.id)}
                     />
-                  );
-                })}
-                <button
-                  type="button"
-                  onClick={() => store.addVehicle(tab === 'rental')}
-                  className="w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-green-500 hover:text-green-700"
-                >
-                  + {tab === 'rental' ? '렌트 차량' : '차량'} 추가
-                </button>
-              </div>
-              {tab === 'carpool' ? (
-                <>
-                  {carpoolVehicles.length === 0 ? (
-                    <p className="mt-3 rounded-xl border-2 border-dashed border-green-300 bg-green-50/60 py-6 text-center text-sm text-green-800">
-                      차량을 추가하면 정산 결과가 표시됩니다.
-                    </p>
-                  ) : (
-                    <CarpoolResult
-                      result={carpoolResult}
-                      vehicles={state.vehicles}
-                      participants={state.participants}
-                      fuelRatePerKm={fuelRate}
-                    />
-                  )}
-                </>
-              ) : (
-                <>
-                  {rentalVehicles.length === 0 ? (
-                    <p className="mt-3 rounded-xl border-2 border-dashed border-purple-300 bg-purple-50/60 py-6 text-center text-sm text-purple-800">
-                      렌트 차량을 추가하면 정산 결과가 표시됩니다.
-                    </p>
-                  ) : (
-                    <RentalResult results={rentalResults} participants={state.participants} />
-                  )}
-                </>
-              )}
-            </>
-          )}
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => store.addExpense(state.participants.map((p) => p.id))}
+                    className="min-h-11 w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-amber-500 hover:text-amber-700"
+                  >
+                    + 경비 항목 추가
+                  </button>
+                </div>
+                {state.expenses.length > 0 && (
+                  <ExpenseResult
+                    result={expenseResult}
+                    expenses={state.expenses}
+                    participants={state.participants}
+                  />
+                )}
+                {state.expenses.length === 0 && (
+                  <p className="mt-3 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 py-6 text-center text-sm text-amber-700">
+                    경비 항목을 추가하면 정산 결과가 표시됩니다.
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="mb-3 space-y-3">
+                  {(tab === 'carpool' ? carpoolVehicles : rentalVehicles).map((v, idx) => {
+                    const occupiedIds =
+                      tab === 'carpool'
+                        ? carpoolVehicles
+                            .filter((other) => other.id !== v.id)
+                            .flatMap((other) => [...other.driverIds, ...other.passengerIds])
+                        : [];
+                    return (
+                      <VehicleCard
+                        key={v.id}
+                        vehicle={v}
+                        participants={state.participants}
+                        mode={tab as 'carpool' | 'rental'}
+                        index={idx}
+                        fuelRatePerKm={fuelRate}
+                        occupiedIds={occupiedIds}
+                        onChange={(patch) => store.updateVehicle(v.id, patch)}
+                        onRemove={() => store.removeVehicle(v.id)}
+                      />
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => store.addVehicle(tab === 'rental')}
+                    className="min-h-11 w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-green-500 hover:text-green-700"
+                  >
+                    + {tab === 'rental' ? '렌트 차량' : '차량'} 추가
+                  </button>
+                </div>
+                {tab === 'carpool' ? (
+                  <>
+                    {carpoolVehicles.length === 0 ? (
+                      <p className="mt-3 rounded-xl border-2 border-dashed border-green-300 bg-green-50/60 py-6 text-center text-sm text-green-800">
+                        차량을 추가하면 정산 결과가 표시됩니다.
+                      </p>
+                    ) : (
+                      <CarpoolResult
+                        result={carpoolResult}
+                        vehicles={state.vehicles}
+                        participants={state.participants}
+                        fuelRatePerKm={fuelRate}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {rentalVehicles.length === 0 ? (
+                      <p className="mt-3 rounded-xl border-2 border-dashed border-purple-300 bg-purple-50/60 py-6 text-center text-sm text-purple-800">
+                        렌트 차량을 추가하면 정산 결과가 표시됩니다.
+                      </p>
+                    ) : (
+                      <RentalResult results={rentalResults} participants={state.participants} />
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={goToSummary}
+            disabled={!hasSettlementData}
+            className="min-h-11 rounded-lg bg-amber-500 px-4 text-sm font-semibold text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            정산 요약 보기
+          </button>
+        </div>
+      </StepSection>
 
-      {/* 최종 정산 요약 */}
-      {state.participants.length > 0 &&
-        (carpoolVehicles.length > 0 || rentalVehicles.length > 0 || state.expenses.length > 0) && (
-          <section className="relative z-10 mb-4 overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4 shadow-lg shadow-amber-100">
+      {hasSettlementData && (
+          <section
+            ref={summaryRef}
+            className="relative z-10 mb-4 overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4 shadow-lg shadow-amber-100"
+          >
             {/* 벙주 미선택 안내 */}
             {!banjangId && (
               <div className="mb-3 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
@@ -562,7 +685,48 @@ export default function App() {
                 </span>
               </div>
             </div>
-            <table className="mb-3 w-full border-collapse text-sm">
+            <div className="mb-3 space-y-2 md:hidden">
+              {[...state.participants]
+                .sort((a, b) => (a.id === banjangId ? -1 : b.id === banjangId ? 1 : 0))
+                .map((p) => {
+                  const bal = finalNetBalance.get(p.id) ?? 0;
+                  if (Math.abs(bal) < 1) return null;
+                  const isBanjang = p.id === banjangId;
+                  const isExpanded = expandedIds.has(p.id);
+                  const breakdown = participantBreakdown.get(p.id) ?? [];
+                  return (
+                    <article key={p.id} className="rounded-xl border border-amber-200 bg-white/70 p-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(p.id)}
+                        className="flex min-h-11 w-full items-center justify-between text-left"
+                        aria-expanded={isExpanded}
+                      >
+                        <span className="flex items-center gap-1 text-sm font-semibold text-stone-800">
+                          {isBanjang && <span>👑</span>}
+                          {p.name}
+                        </span>
+                        <span className={'text-sm font-bold ' + (bal > 0 ? 'text-green-700' : 'text-red-600')}>
+                          {bal > 0 ? `+${formatKRW(bal)} 수령` : `${formatKRW(Math.abs(bal))} 납부`}
+                        </span>
+                      </button>
+                      {isExpanded && breakdown.length > 0 && (
+                        <div className="mt-2 border-t border-amber-200 pt-2 text-sm">
+                          {breakdown.map((item, i) => (
+                            <div key={i} className="flex items-center justify-between py-0.5">
+                              <span className="text-stone-600">{item.label}</span>
+                              <span className={item.amount >= 0 ? 'font-semibold text-green-700' : 'font-semibold text-red-600'}>
+                                {item.amount >= 0 ? `+${formatKRW(item.amount)}` : `-${formatKRW(Math.abs(item.amount))}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+            </div>
+            <table className="mb-3 hidden w-full border-collapse text-sm md:table">
               <tbody>
                 {[...state.participants]
                   .sort((a, b) => (a.id === banjangId ? -1 : b.id === banjangId ? 1 : 0))
@@ -785,10 +949,35 @@ export default function App() {
               </section>
             )}
             <div className="mt-4">
-              <CopyShareButton text={combinedShareText} />
+              <div className="mb-2 inline-flex rounded-full border border-amber-300 bg-white p-1 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setShareMode('summary')}
+                  className={
+                    'min-h-10 rounded-full px-3 transition ' +
+                    (shareMode === 'summary' ? 'bg-amber-500 font-semibold text-white' : 'text-amber-700 hover:text-amber-900')
+                  }
+                >
+                  요약형 복사
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShareMode('detail')}
+                  className={
+                    'min-h-10 rounded-full px-3 transition ' +
+                    (shareMode === 'detail' ? 'bg-amber-500 font-semibold text-white' : 'text-amber-700 hover:text-amber-900')
+                  }
+                >
+                  상세형 복사
+                </button>
+              </div>
+              <CopyShareButton
+                text={shareMode === 'summary' ? summaryShareText : combinedShareText}
+                label={shareMode === 'summary' ? '요약 텍스트 복사' : '상세 텍스트 복사'}
+              />
             </div>
           </section>
-        )}
+      )}
 
       {/* 백업/초기화 */}
       <section className="rounded-xl bg-white p-4 shadow-sm">
@@ -832,7 +1021,73 @@ export default function App() {
         <p>⚠ 첫 탑승자 픽업지 기준 왕복거리 입력 · 편도 탑승자도 왕복 동일 기준 · 1원 단위 반올림</p>
         <p>🌰 도토리 산행 정산 v1.0.3 · 2026-05-23</p>
       </footer>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-stone-300 bg-white/95 p-3 backdrop-blur-sm md:hidden">
+        <div className="mx-auto grid max-w-2xl grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveStep(3);
+              addCurrentItem();
+            }}
+            className="min-h-11 rounded-lg border border-stone-300 bg-white px-2 text-xs font-semibold text-stone-700"
+          >
+            {tab === 'expense' ? '경비 추가' : tab === 'rental' ? '렌트 추가' : '차량 추가'}
+          </button>
+          <button
+            type="button"
+            onClick={goToSummary}
+            disabled={!hasSettlementData}
+            className="min-h-11 rounded-lg bg-amber-500 px-2 text-xs font-semibold text-white disabled:opacity-40"
+          >
+            정산 보기
+          </button>
+          <button
+            type="button"
+            onClick={handleCopyFromBar}
+            disabled={!hasSettlementData}
+            className="min-h-11 rounded-lg bg-green-600 px-2 text-xs font-semibold text-white disabled:opacity-40"
+          >
+            {barCopied ? '복사 완료' : '복사'}
+          </button>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function StepSection({
+  step,
+  title,
+  activeStep,
+  onOpen,
+  children,
+}: {
+  step: Step;
+  title: string;
+  activeStep: Step;
+  onOpen: () => void;
+  children: React.ReactNode;
+}) {
+  const isOpen = activeStep === step;
+  return (
+    <section className="mb-4 overflow-hidden rounded-xl bg-white shadow-sm">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex min-h-11 w-full items-center justify-between px-4 py-3 text-left"
+        aria-expanded={isOpen}
+      >
+        <span className="text-base font-semibold text-stone-800">
+          <span className="mr-1.5 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">
+            {String(step).padStart(2, '0')}
+          </span>
+          {title}
+        </span>
+        <span className={'text-xs text-stone-500 transition-transform ' + (isOpen ? 'rotate-90' : '')}>▶</span>
+      </button>
+      {isOpen && <div className="border-t border-stone-100 p-4">{children}</div>}
+    </section>
   );
 }
 
@@ -852,7 +1107,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={
-        'flex-1 rounded-lg py-2 text-sm font-medium transition ' +
+        'min-h-11 flex-1 rounded-lg py-2 text-sm font-medium transition ' +
         (active ? activeClass : 'text-stone-600 hover:text-stone-800')
       }
     >

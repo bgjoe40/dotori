@@ -97,6 +97,17 @@ export default function VehicleCard({
     });
   };
 
+  const warnings: string[] = [];
+  if (participants.length > 0 && driverIds.length === 0) {
+    warnings.push('운전자를 최소 1명 선택해 주세요.');
+  }
+  if (mode === 'carpool' && driverIds.length > 0 && vehicle.passengerIds.length === 0) {
+    warnings.push('탑승자가 없으면 수고비 분배가 어렵습니다.');
+  }
+  if (mode === 'rental' && (vehicle.rentalFee ?? 0) <= 0) {
+    warnings.push('렌트 탭에서는 총 렌트비를 입력해 주세요.');
+  }
+
   return (
     <article className="rounded-xl bg-white p-4 shadow-sm">
       <header className="mb-3 flex items-center justify-between">
@@ -140,7 +151,7 @@ export default function VehicleCard({
                       title={occupied ? '다른 차량에 배정됨' : undefined}
                       onClick={() => !occupied && toggleDriver(p.id)}
                       className={
-                        'rounded-full border px-3 py-1 text-xs transition ' +
+                        'min-h-11 rounded-full border px-4 py-2 text-sm transition ' +
                         (selected
                           ? 'border-green-600 bg-green-600 text-white'
                           : occupied
@@ -174,7 +185,7 @@ export default function VehicleCard({
                       title={occupied ? '다른 차량에 배정됨' : undefined}
                       onClick={() => !occupied && togglePassenger(p.id)}
                       className={
-                        'rounded-full border px-3 py-1 text-xs transition ' +
+                        'min-h-11 rounded-full border px-4 py-2 text-sm transition ' +
                         (selected
                           ? 'border-sky-600 bg-sky-600 text-white'
                           : occupied
@@ -202,6 +213,23 @@ export default function VehicleCard({
             onChange={(n) => onChange({ distanceKm: n })}
             suffix="km"
           />
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {[30, 50, 80, 120].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => onChange({ distanceKm: preset })}
+                className={
+                  'min-h-9 rounded-full border px-2.5 text-xs transition ' +
+                  (vehicle.distanceKm === preset
+                    ? 'border-green-600 bg-green-600 text-white'
+                    : 'border-stone-300 bg-white text-stone-600 hover:border-green-400')
+                }
+              >
+                {preset}km
+              </button>
+            ))}
+          </div>
         </div>
         {mode === 'carpool' ? (
           <>
@@ -311,6 +339,13 @@ export default function VehicleCard({
           </>
         )}
       </div>
+      {warnings.length > 0 && (
+        <ul className="mt-3 space-y-1 rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-sm text-amber-800">
+          {warnings.map((warning) => (
+            <li key={warning}>• {warning}</li>
+          ))}
+        </ul>
+      )}
     </article>
   );
 }

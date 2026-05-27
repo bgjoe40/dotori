@@ -44,7 +44,7 @@ export default function ParticipantList({
 
       <div className="flex gap-2">
         <input
-          className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+          className="min-h-11 flex-1 rounded-lg border border-stone-300 px-3 py-2 text-base focus:border-green-500 focus:outline-none"
           placeholder="이름 입력 후 엔터"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -58,7 +58,7 @@ export default function ParticipantList({
         <button
           type="button"
           onClick={submit}
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+          className="min-h-11 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
         >
           추가
         </button>
@@ -102,7 +102,7 @@ export default function ParticipantList({
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-1 text-xs text-stone-600">
+                  <label className="flex min-h-11 items-center gap-1 text-sm text-stone-600">
                     <input
                       type="checkbox"
                       checked={isBanjang}
@@ -111,7 +111,7 @@ export default function ParticipantList({
                     />
                     벙주
                   </label>
-                  <label className="flex items-center gap-1 text-xs text-stone-600">
+                  <label className="flex min-h-11 items-center gap-1 text-sm text-stone-600">
                     <input
                       type="checkbox"
                       checked={p.isCarpool}

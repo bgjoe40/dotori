@@ -42,6 +42,17 @@ export default function ExpenseCard({
     }
   };
 
+  const warnings: string[] = [];
+  if (participants.length > 0 && !expense.payerId) {
+    warnings.push('지불자를 선택해 주세요.');
+  }
+  if (participants.length > 0 && expense.sharerIds.length === 0) {
+    warnings.push('분배 대상을 최소 1명 선택해 주세요.');
+  }
+  if (expense.amount <= 0) {
+    warnings.push(isEven ? '총 금액을 입력해 주세요.' : '1인당 금액을 입력해 주세요.');
+  }
+
   return (
     <article className="rounded-xl bg-white p-4 shadow-sm">
       <header className="mb-3 flex items-center justify-between">
@@ -53,7 +64,7 @@ export default function ExpenseCard({
               type="button"
               onClick={() => onChange({ splitMode: 'even' })}
               className={
-                'rounded-full px-2.5 py-0.5 transition ' +
+                'min-h-10 rounded-full px-3 py-1 transition ' +
                 (isEven
                   ? 'bg-amber-500 font-semibold text-white shadow-sm'
                   : 'text-stone-500 hover:text-stone-700')
@@ -65,7 +76,7 @@ export default function ExpenseCard({
               type="button"
               onClick={() => onChange({ splitMode: 'perPerson' })}
               className={
-                'rounded-full px-2.5 py-0.5 transition ' +
+                'min-h-10 rounded-full px-3 py-1 transition ' +
                 (!isEven
                   ? 'bg-amber-500 font-semibold text-white shadow-sm'
                   : 'text-stone-500 hover:text-stone-700')
@@ -127,7 +138,7 @@ export default function ExpenseCard({
                   type="button"
                   onClick={() => onChange({ payerId: p.id })}
                   className={
-                    'rounded-full border px-3 py-1 text-xs transition ' +
+                    'min-h-11 rounded-full border px-4 py-2 text-sm transition ' +
                     (selected
                       ? 'border-amber-600 bg-amber-600 text-white'
                       : 'border-stone-300 bg-white text-stone-700 hover:border-amber-400')
@@ -168,7 +179,7 @@ export default function ExpenseCard({
                   type="button"
                   onClick={() => toggleSharer(p.id)}
                   className={
-                    'rounded-full border px-3 py-1 text-xs transition ' +
+                    'min-h-11 rounded-full border px-4 py-2 text-sm transition ' +
                     (selected
                       ? 'border-stone-700 bg-stone-700 text-white'
                       : 'border-stone-300 bg-white text-stone-500 hover:border-stone-500')
@@ -205,6 +216,13 @@ export default function ExpenseCard({
             </span>
           )}
         </div>
+      )}
+      {warnings.length > 0 && (
+        <ul className="mt-3 space-y-1 rounded-lg border border-amber-300 bg-amber-50 p-2.5 text-sm text-amber-800">
+          {warnings.map((warning) => (
+            <li key={warning}>• {warning}</li>
+          ))}
+        </ul>
       )}
     </article>
   );
