@@ -58,6 +58,22 @@ body {
   }
 }
 
+/* ── 별 반짝임 애니메이션 (다크모드 전용) ─────────────────────── */
+@keyframes twinkle {
+  0%, 100% { opacity: var(--star-opacity); transform: scale(1); }
+  50%       { opacity: calc(var(--star-opacity) * 0.15); transform: scale(0.6); }
+}
+
+.star {
+  animation: twinkle ease-in-out infinite;
+  transform-origin: center center;
+  transform-box: fill-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star { animation: none; }
+}
+
 /* ── 라이트 테마 기본 (body 배경) ─────────────────────────────── */
 html:not(.dark) body {
   background-color: #fafaf9; /* stone-50 */

@@ -21,34 +21,34 @@ export default function SkyBackground() {
       >
         <g fill="white">
           {/* 크기별 별 — 각 circle는 cx, cy, r */}
-          <circle cx="60"  cy="40"  r="1.2" opacity="0.9" />
-          <circle cx="150" cy="20"  r="0.8" opacity="0.7" />
-          <circle cx="240" cy="55"  r="1.5" opacity="0.85" />
-          <circle cx="310" cy="15"  r="0.9" opacity="0.8" />
-          <circle cx="400" cy="35"  r="1.1" opacity="0.75" />
-          <circle cx="480" cy="10"  r="1.4" opacity="0.9" />
-          <circle cx="555" cy="50"  r="0.7" opacity="0.6" />
-          <circle cx="630" cy="22"  r="1.2" opacity="0.85" />
-          <circle cx="700" cy="42"  r="0.9" opacity="0.7" />
-          <circle cx="770" cy="12"  r="1.6" opacity="0.9" />
-          <circle cx="850" cy="38"  r="1.0" opacity="0.75" />
-          <circle cx="920" cy="18"  r="0.7" opacity="0.65" />
-          <circle cx="990" cy="48"  r="1.3" opacity="0.8" />
-          <circle cx="1060" cy="25" r="0.9" opacity="0.7" />
-          <circle cx="1130" cy="55" r="1.1" opacity="0.85" />
-          <circle cx="1180" cy="15" r="0.8" opacity="0.6" />
-          <circle cx="200"  cy="90"  r="0.7" opacity="0.55" />
-          <circle cx="350"  cy="80"  r="1.0" opacity="0.65" />
-          <circle cx="500"  cy="95"  r="0.8" opacity="0.6" />
-          <circle cx="660"  cy="75"  r="1.2" opacity="0.7" />
-          <circle cx="810"  cy="88"  r="0.7" opacity="0.55" />
-          <circle cx="960"  cy="82"  r="1.0" opacity="0.65" />
-          <circle cx="1100" cy="90"  r="0.8" opacity="0.6" />
+          <circle className="star" style={{'--star-opacity':'0.9','animationDuration':'3.2s','animationDelay':'0s'} as React.CSSProperties} cx="60"  cy="40"  r="1.2" opacity="0.9" />
+          <circle className="star" style={{'--star-opacity':'0.7','animationDuration':'4.5s','animationDelay':'-1.1s'} as React.CSSProperties} cx="150" cy="20"  r="0.8" opacity="0.7" />
+          <circle className="star" style={{'--star-opacity':'0.85','animationDuration':'2.8s','animationDelay':'-2.3s'} as React.CSSProperties} cx="240" cy="55"  r="1.5" opacity="0.85" />
+          <circle className="star" style={{'--star-opacity':'0.8','animationDuration':'5.1s','animationDelay':'-0.7s'} as React.CSSProperties} cx="310" cy="15"  r="0.9" opacity="0.8" />
+          <circle className="star" style={{'--star-opacity':'0.75','animationDuration':'3.7s','animationDelay':'-3.4s'} as React.CSSProperties} cx="400" cy="35"  r="1.1" opacity="0.75" />
+          <circle className="star" style={{'--star-opacity':'0.9','animationDuration':'2.5s','animationDelay':'-1.8s'} as React.CSSProperties} cx="480" cy="10"  r="1.4" opacity="0.9" />
+          <circle className="star" style={{'--star-opacity':'0.6','animationDuration':'4.9s','animationDelay':'-4.2s'} as React.CSSProperties} cx="555" cy="50"  r="0.7" opacity="0.6" />
+          <circle className="star" style={{'--star-opacity':'0.85','animationDuration':'3.3s','animationDelay':'-0.5s'} as React.CSSProperties} cx="630" cy="22"  r="1.2" opacity="0.85" />
+          <circle className="star" style={{'--star-opacity':'0.7','animationDuration':'5.6s','animationDelay':'-2.9s'} as React.CSSProperties} cx="700" cy="42"  r="0.9" opacity="0.7" />
+          <circle className="star" style={{'--star-opacity':'0.9','animationDuration':'2.1s','animationDelay':'-1.4s'} as React.CSSProperties} cx="770" cy="12"  r="1.6" opacity="0.9" />
+          <circle className="star" style={{'--star-opacity':'0.75','animationDuration':'4.2s','animationDelay':'-3.7s'} as React.CSSProperties} cx="850" cy="38"  r="1.0" opacity="0.75" />
+          <circle className="star" style={{'--star-opacity':'0.65','animationDuration':'6.0s','animationDelay':'-0.2s'} as React.CSSProperties} cx="920" cy="18"  r="0.7" opacity="0.65" />
+          <circle className="star" style={{'--star-opacity':'0.8','animationDuration':'3.9s','animationDelay':'-2.1s'} as React.CSSProperties} cx="990" cy="48"  r="1.3" opacity="0.8" />
+          <circle className="star" style={{'--star-opacity':'0.7','animationDuration':'4.7s','animationDelay':'-4.8s'} as React.CSSProperties} cx="1060" cy="25" r="0.9" opacity="0.7" />
+          <circle className="star" style={{'--star-opacity':'0.85','animationDuration':'3.1s','animationDelay':'-1.6s'} as React.CSSProperties} cx="1130" cy="55" r="1.1" opacity="0.85" />
+          <circle className="star" style={{'--star-opacity':'0.6','animationDuration':'5.3s','animationDelay':'-3.0s'} as React.CSSProperties} cx="1180" cy="15" r="0.8" opacity="0.6" />
+          <circle className="star" style={{'--star-opacity':'0.55','animationDuration':'4.4s','animationDelay':'-1.3s'} as React.CSSProperties} cx="200"  cy="90"  r="0.7" opacity="0.55" />
+          <circle className="star" style={{'--star-opacity':'0.65','animationDuration':'2.9s','animationDelay':'-5.2s'} as React.CSSProperties} cx="350"  cy="80"  r="1.0" opacity="0.65" />
+          <circle className="star" style={{'--star-opacity':'0.6','animationDuration':'5.8s','animationDelay':'-0.9s'} as React.CSSProperties} cx="500"  cy="95"  r="0.8" opacity="0.6" />
+          <circle className="star" style={{'--star-opacity':'0.7','animationDuration':'3.5s','animationDelay':'-3.3s'} as React.CSSProperties} cx="660"  cy="75"  r="1.2" opacity="0.7" />
+          <circle className="star" style={{'--star-opacity':'0.55','animationDuration':'4.1s','animationDelay':'-2.6s'} as React.CSSProperties} cx="810"  cy="88"  r="0.7" opacity="0.55" />
+          <circle className="star" style={{'--star-opacity':'0.65','animationDuration':'6.2s','animationDelay':'-4.5s'} as React.CSSProperties} cx="960"  cy="82"  r="1.0" opacity="0.65" />
+          <circle className="star" style={{'--star-opacity':'0.6','animationDuration':'3.6s','animationDelay':'-1.9s'} as React.CSSProperties} cx="1100" cy="90"  r="0.8" opacity="0.6" />
           {/* 반짝이는 별 (r이 약간 큰 것들) */}
-          <circle cx="110" cy="110" r="1.8" opacity="0.5" />
-          <circle cx="430" cy="120" r="1.5" opacity="0.45" />
-          <circle cx="740" cy="105" r="1.7" opacity="0.5" />
-          <circle cx="1050" cy="115" r="1.6" opacity="0.45" />
+          <circle className="star" style={{'--star-opacity':'0.5','animationDuration':'2.3s','animationDelay':'-0.6s'} as React.CSSProperties} cx="110" cy="110" r="1.8" opacity="0.5" />
+          <circle className="star" style={{'--star-opacity':'0.45','animationDuration':'1.9s','animationDelay':'-2.4s'} as React.CSSProperties} cx="430" cy="120" r="1.5" opacity="0.45" />
+          <circle className="star" style={{'--star-opacity':'0.5','animationDuration':'2.6s','animationDelay':'-1.0s'} as React.CSSProperties} cx="740" cy="105" r="1.7" opacity="0.5" />
+          <circle className="star" style={{'--star-opacity':'0.45','animationDuration':'2.2s','animationDelay':'-3.8s'} as React.CSSProperties} cx="1050" cy="115" r="1.6" opacity="0.45" />
         </g>
       </svg>
 
