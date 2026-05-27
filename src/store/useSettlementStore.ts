@@ -14,13 +14,51 @@ const initialState: AppState = {
 };
 
 /** 기존 저장본에 누락된 필드 주입 */
+function isValidParticipant(p: unknown): boolean {
+  return (
+    typeof p === 'object' &&
+    p !== null &&
+    typeof (p as Record<string, unknown>).id === 'string' &&
+    typeof (p as Record<string, unknown>).name === 'string' &&
+    typeof (p as Record<string, unknown>).isCarpool === 'boolean'
+  );
+}
+function isValidVehicle(v: unknown): boolean {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    typeof (v as Record<string, unknown>).id === 'string' &&
+    Array.isArray((v as Record<string, unknown>).driverIds) &&
+    Array.isArray((v as Record<string, unknown>).passengerIds) &&
+    typeof (v as Record<string, unknown>).distanceKm === 'number' &&
+    typeof (v as Record<string, unknown>).isRental === 'boolean'
+  );
+}
+function isValidExpense(e: unknown): boolean {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    typeof (e as Record<string, unknown>).id === 'string' &&
+    typeof (e as Record<string, unknown>).description === 'string' &&
+    typeof (e as Record<string, unknown>).amount === 'number' &&
+    typeof (e as Record<string, unknown>).payerId === 'string' &&
+    Array.isArray((e as Record<string, unknown>).sharerIds)
+  );
+}
+
 function migrate(raw: Partial<AppState>): AppState {
   return {
     meeting: raw.meeting ?? initialState.meeting,
-    participants: Array.isArray(raw.participants) ? raw.participants : [],
-    vehicles: Array.isArray(raw.vehicles) ? raw.vehicles : [],
+    participants: Array.isArray(raw.participants)
+      ? (raw.participants as unknown[]).filter(isValidParticipant) as Participant[]
+      : [],
+    vehicles: Array.isArray(raw.vehicles)
+      ? (raw.vehicles as unknown[]).filter(isValidVehicle) as Vehicle[]
+      : [],
     expenses: Array.isArray(raw.expenses)
-      ? (raw.expenses as Expense[]).map((e) => ({ splitMode: 'even' as const, ...e }))
+      ? (raw.expenses as unknown[])
+          .filter(isValidExpense)
+          .map((e) => ({ splitMode: 'even' as const, ...(e as Expense) }))
       : [],
     settings: raw.settings ?? initialState.settings,
   };
@@ -43,11 +81,14 @@ export function useSettlementStore() {
   const [state, setState] = useState<AppState>(loadInitial);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // ignore quota errors
-    }
+    const timer = setTimeout(() => {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // ignore quota errors
+      }
+    }, 200);
+    return () => clearTimeout(timer);
   }, [state]);
 
   const setMeeting = useCallback((meeting: Partial<AppState['meeting']>) => {
@@ -63,12 +104,18 @@ export function useSettlementStore() {
   const addParticipant = useCallback((name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    const pid = newId('p');
     setState((s) => ({
       ...s,
       participants: [
         ...s.participants,
-        { id: newId('p'), name: trimmed, isCarpool: true },
+        { id: pid, name: trimmed, isCarpool: true },
       ],
+      // 신규 참가자를 기존 경비 항목 분담자에 자동 포함
+      expenses: s.expenses.map((e) => ({
+        ...e,
+        sharerIds: [...e.sharerIds, pid],
+      })),
     }));
   }, []);
 
@@ -99,16 +146,21 @@ export function useSettlementStore() {
         banjangId: s.meeting.banjangId === id ? undefined : s.meeting.banjangId,
       },
       participants: s.participants.filter((p) => p.id !== id),
-      vehicles: s.vehicles.map((v) => ({
-        ...v,
-        driverIds: v.driverIds.filter((d) => d !== id),
-        passengerIds: v.passengerIds.filter((d) => d !== id),
-        driverShareRatios: v.driverShareRatios
+      vehicles: s.vehicles.map((v) => {
+        const newDriverIds = v.driverIds.filter((d) => d !== id);
+        const newRatios = v.driverShareRatios
           ? Object.fromEntries(
               Object.entries(v.driverShareRatios).filter(([k]) => k !== id),
             )
-          : undefined,
-      })),
+          : undefined;
+        return {
+          ...v,
+          driverIds: newDriverIds,
+          passengerIds: v.passengerIds.filter((d) => d !== id),
+          // 운전자가 1명 이하로 줄면 비율 초기화
+          driverShareRatios: newDriverIds.length <= 1 ? undefined : newRatios,
+        };
+      }),
       // 경비에서도 제거
       expenses: s.expenses.map((e) => ({
         ...e,

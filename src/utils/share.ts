@@ -76,7 +76,15 @@ export function buildRentalShareText(
     lines.push('━━━━━━━━━━━━━━━━━━');
     const drivers = v.driverIds.map((id) => nameOf(id, participants)).join(', ') || '?';
     lines.push(`🚐 렌트차량 (${drivers}, ${v.distanceKm}km)`);
-    lines.push(`총 렌트비: ${formatKRW(r.rentalFee)}`);
+    const rentalExtra: string[] = [];
+    if (v.tollFee > 0) rentalExtra.push(`톨비 ${formatKRW(v.tollFee)}`);
+    if (v.parkingFee > 0) rentalExtra.push(`주차비 ${formatKRW(v.parkingFee)}`);
+    const totalRentalCost = r.rentalFee + r.tollFee + r.parkingFee;
+    const rentalLine =
+      rentalExtra.length > 0
+        ? `렌트비 ${formatKRW(r.rentalFee)} + ${rentalExtra.join(' + ')} = ${formatKRW(totalRentalCost)}`
+        : `렌트비 ${formatKRW(r.rentalFee)}`;
+    lines.push(rentalLine);
     lines.push(`1인당 렌트비: ${formatKRW(r.rentalPerPerson)} × ${r.totalHeadcount}명`);
     lines.push(
       `1인당 수고비: ${formatKRW(r.laborPerPassenger)} (탑승자 ${v.passengerIds.length}명)`,

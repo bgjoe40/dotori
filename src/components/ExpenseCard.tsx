@@ -59,7 +59,7 @@ export default function ExpenseCard({
                   : 'text-stone-500 hover:text-stone-700')
               }
             >
-              N빵
+              총액 N빵
             </button>
             <button
               type="button"
@@ -71,7 +71,7 @@ export default function ExpenseCard({
                   : 'text-stone-500 hover:text-stone-700')
               }
             >
-              인원추가
+              1인당 고정
             </button>
           </div>
         </div>

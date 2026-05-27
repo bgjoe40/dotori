@@ -19,7 +19,7 @@ export default function CarpoolResult({ result, vehicles, participants, fuelRate
       {/* 1인당 요약 카드 */}
       <div className="grid grid-cols-2 gap-3 text-center">
         <div className="rounded-lg bg-red-50 p-3">
-          <div className="text-xs text-red-700">� 유류비 1인당</div>
+          <div className="text-xs text-red-700">🔴 유류비 1인당</div>
           <div className="mt-1 text-lg font-bold text-red-700">
             {formatKRW(result.fuelPerPerson)}
           </div>

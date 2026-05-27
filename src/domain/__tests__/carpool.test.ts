@@ -180,4 +180,19 @@ describe('calcCarpoolSettlement', () => {
     const driverPayoutSum = r.driverPayouts.reduce((s, d) => s + d.amount, 0);
     expect(passengerOwedSum).toBe(driverPayoutSum);
   });
+
+  it('반올림 잔차 보정 — Σ(driverPayouts) === Σ(non-driver owed.total)', () => {
+    const participants = [P('d', 'D'), P('p1', 'P1'), P('p2', 'P2')];
+    const vehicles: Vehicle[] = [
+      V({ id: 'v1', driverIds: ['d'], passengerIds: ['p1', 'p2'], distanceKm: 0, tollFee: 10000 }),
+    ];
+    const r = calcCarpoolSettlement(vehicles, participants);
+    expect(r.totalFuel).toBe(10000);
+    expect(r.fuelPerPerson).toBe(3333);
+    const p1owed = r.owed.find((o) => o.participantId === 'p1')!;
+    const p2owed = r.owed.find((o) => o.participantId === 'p2')!;
+    const totalNonDriverOwed = p1owed.total + p2owed.total;
+    const totalDriverPayout = r.driverPayouts.reduce((s, d) => s + d.amount, 0);
+    expect(totalDriverPayout).toBe(totalNonDriverOwed);
+  });
 });

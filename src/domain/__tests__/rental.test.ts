@@ -73,4 +73,24 @@ describe('calcRentalSettlement', () => {
       { driverId: 'd2', amount: 3000 },
     ]);
   });
+
+  it('렌트비 + 톨비 + 주차비 합산 반영', () => {
+    const participants = [P('d', 'D'), P('p1', 'P1'), P('p2', 'P2')];
+    const v: Vehicle = {
+      id: 'r4',
+      driverIds: ['d'],
+      passengerIds: ['p1', 'p2'],
+      distanceKm: 0,
+      tollFee: 3000,
+      parkingFee: 2000,
+      isRental: true,
+      rentalFee: 90000,
+    };
+    const r = calcRentalSettlement(v, participants);
+    // totalRentalCost = 90000 + 3000 + 2000 = 95000
+    // rentalPerPerson = round(95000/3) = 31667
+    expect(r.rentalPerPerson).toBe(31667);
+    expect(r.tollFee).toBe(3000);
+    expect(r.parkingFee).toBe(2000);
+  });
 });

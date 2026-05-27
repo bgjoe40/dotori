@@ -152,6 +152,8 @@ export interface ExpenseSettlement {
 export interface RentalSettlement {
   vehicleId: ID;
   rentalFee: number;
+  tollFee: number;
+  parkingFee: number;
   laborCost: number;
   totalHeadcount: number;
   /** 1인당 렌트비 (운전자+탑승자 균등) */

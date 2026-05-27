@@ -111,6 +111,16 @@ export function calcCarpoolSettlement(
     r.driverPayout = basePerDriver;
   }
 
+  // Balance adjustment: ensure Σ(driverPayouts) === Σ(non-driver owed.total)
+  const totalNonDriverOwed = owed
+    .filter((o) => !o.isDriver)
+    .reduce((s, o) => s + o.total, 0);
+  const totalDriverPayout = driverPayouts.reduce((s, d) => s + d.amount, 0);
+  const residual = totalNonDriverOwed - totalDriverPayout;
+  if (residual !== 0 && driverPayouts.length > 0) {
+    driverPayouts[driverPayouts.length - 1].amount += residual;
+  }
+
   // 운전자별 수고비 수령 합계
   const laborReceiptMap = new Map<string, number>();
   for (const v of carpoolVehicles) {

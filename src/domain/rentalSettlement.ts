@@ -30,10 +30,13 @@ export function calcRentalSettlement(
 
   const totalHeadcount = drivers.length + passengers.length;
   const rentalFee = Math.max(0, vehicle.rentalFee ?? 0);
+  const tollFee = Math.max(0, vehicle.tollFee ?? 0);
+  const parkingFee = Math.max(0, vehicle.parkingFee ?? 0);
+  const totalRentalCost = rentalFee + tollFee + parkingFee;
   const laborCost = calcLaborCost(vehicle.distanceKm);
 
   const rentalPerPerson =
-    totalHeadcount > 0 ? round(rentalFee / totalHeadcount) : 0;
+    totalHeadcount > 0 ? round(totalRentalCost / totalHeadcount) : 0;
   const laborPerPassenger =
     passengers.length > 0 ? round(laborCost / passengers.length) : 0;
 
@@ -76,6 +79,8 @@ export function calcRentalSettlement(
   return {
     vehicleId: vehicle.id,
     rentalFee,
+    tollFee,
+    parkingFee,
     laborCost,
     totalHeadcount,
     rentalPerPerson,

@@ -27,7 +27,7 @@ export default function RentalResult({ results, participants }: Props) {
                 {formatKRW(r.rentalPerPerson)}
               </div>
               <div className="text-xs text-purple-600">
-                ÷ {r.totalHeadcount}명
+                {formatKRW(r.rentalFee + r.tollFee + r.parkingFee)} ÷ {r.totalHeadcount}명
               </div>
             </div>
             <div className="rounded-lg bg-amber-50 p-3">

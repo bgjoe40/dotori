@@ -227,16 +227,38 @@ export default function VehicleCard({
             </div>
           </>
         ) : (
-          <div className="sm:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-stone-600">
-              총 렌트비
-            </label>
-            <NumInput
-              value={vehicle.rentalFee ?? 0}
-              onChange={(n) => onChange({ rentalFee: n })}
-              suffix="원"
-            />
-          </div>
+          <>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-stone-600">
+                옵 렌트비
+              </label>
+              <NumInput
+                value={vehicle.rentalFee ?? 0}
+                onChange={(n) => onChange({ rentalFee: n })}
+                suffix="원"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-stone-600">
+                톨비
+              </label>
+              <NumInput
+                value={vehicle.tollFee}
+                onChange={(n) => onChange({ tollFee: n })}
+                suffix="원"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-stone-600">
+                주차비
+              </label>
+              <NumInput
+                value={vehicle.parkingFee}
+                onChange={(n) => onChange({ parkingFee: n })}
+                suffix="원"
+              />
+            </div>
+          </>
         )}
       </div>
 
@@ -304,8 +326,8 @@ export default function VehicleCard({
           <>
             <Badge
               color="purple"
-              label="렌트비"
-              value={formatKRW(vehicle.rentalFee ?? 0)}
+              label="렌트비 합계"
+              value={formatKRW((vehicle.rentalFee ?? 0) + vehicle.tollFee + vehicle.parkingFee)}
             />
             <Badge color="amber" label="🟡 수고비" value={formatKRW(laborCost)} />
           </>

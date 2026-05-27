@@ -2,7 +2,7 @@ interface GuideModalProps {
   onClose: () => void;
 }
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface StepSection {
   step: string;
@@ -95,13 +95,24 @@ const sections: StepSection[] = [
 ];
 
 export default function GuideModal({ onClose }: GuideModalProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
     return () => {
       document.body.style.overflow = prev;
     };
   }, []);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onClose]);
 
   return (
     <div
@@ -110,11 +121,16 @@ export default function GuideModal({ onClose }: GuideModalProps) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex w-full max-h-screen flex-col overflow-hidden bg-white sm:max-h-[88vh] sm:max-w-lg sm:rounded-2xl sm:shadow-xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="guide-modal-title"
+        className="flex w-full max-h-screen flex-col overflow-hidden bg-white sm:max-h-[88vh] sm:max-w-lg sm:rounded-2xl sm:shadow-xl">
         {/* 헤더 — sticky */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-stone-100 bg-white px-5 py-3">
-          <h2 className="text-sm font-bold text-stone-900">📖 사용 가이드</h2>
+          <h2 id="guide-modal-title" className="text-sm font-bold text-stone-900">📖 사용 가이드</h2>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label="닫기"

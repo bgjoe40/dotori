@@ -1,4 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+
+declare const __APP_VERSION__: string;
 import AcornRain from '../components/AcornRain';
 import SkyBackground from '../components/SkyBackground';
 import ParticipantList from '../components/ParticipantList';
@@ -25,6 +27,7 @@ export default function App() {
   const [showGuide, setShowGuide] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
+  const guideButtonRef = useRef<HTMLButtonElement>(null);
 
   // ── 테마 (다크/라이트) ─────────────────────────────────────────
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -257,6 +260,11 @@ export default function App() {
     return parts.join('\n\n━━━━━━━━━━━━━━━━━━\n\n');
   }, [carpoolShareText, rentalShareText, expenseShareText, carpoolVehicles.length, rentalVehicles.length, state.expenses.length, state.meeting.name, state.meeting.date, state.participants, banjangId, finalNetBalance, finalTransfers, participantBreakdown, banjangData]);
 
+  const handleGuideClose = () => {
+    setShowGuide(false);
+    setTimeout(() => guideButtonRef.current?.focus(), 0);
+  };
+
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -282,6 +290,10 @@ export default function App() {
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!window.confirm('현재 데이터를 덮어씁니다. 계속하시겠어요?')) {
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const ok = store.importJson(String(reader.result ?? ''));
@@ -300,7 +312,7 @@ export default function App() {
   return (
     <div className="relative mx-auto min-h-screen max-w-2xl px-4 pb-24 pt-6">
       <SkyBackground />
-      {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+      {showGuide && <GuideModal onClose={handleGuideClose} />}
       <AcornRain />
       {/* 헤더 */}
       <header className="mb-4 flex items-start justify-between gap-3">
@@ -312,6 +324,7 @@ export default function App() {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <button
+            ref={guideButtonRef}
             type="button"
             onClick={() => setShowGuide(true)}
             aria-label="사용 가이드 열기"
@@ -357,12 +370,12 @@ export default function App() {
               type="number"
               inputMode="numeric"
               min={1}
-              value={fuelRate === FUEL_RATE_PER_KM && fuelRate === 170 ? fuelRate : fuelRate}
+              value={fuelRate}
               onChange={(e) => {
                 const v = Number(e.target.value);
                 store.setFuelRate(Number.isNaN(v) ? FUEL_RATE_PER_KM : v);
               }}
-              className="w-28 rounded-lg border border-red-300 px-3 py-2 pr-14 text-sm focus:border-red-500 focus:outline-none"
+              className="w-full sm:w-28 rounded-lg border border-red-300 px-3 py-2 pr-14 text-sm focus:border-red-500 focus:outline-none"
               title="유류비 km당 단가"
             />
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-500">
@@ -424,18 +437,25 @@ export default function App() {
                 ))}
                 <button
                   type="button"
+                  disabled={state.participants.length === 0}
+                  title={state.participants.length === 0 ? '참가자를 먼저 추가하세요' : undefined}
                   onClick={() => store.addExpense(state.participants.map((p) => p.id))}
-                  className="w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-amber-500 hover:text-amber-700"
+                  className="w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-amber-500 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   + 경비 항목 추가
                 </button>
               </div>
               {state.expenses.length > 0 && (
-                <ExpenseResult
-                  result={expenseResult}
-                  expenses={state.expenses}
-                  participants={state.participants}
-                />
+                <>
+                  <ExpenseResult
+                    result={expenseResult}
+                    expenses={state.expenses}
+                    participants={state.participants}
+                  />
+                  <div className="mt-2">
+                    <CopyShareButton text={expenseShareText} label="경비 결과 복사" />
+                  </div>
+                </>
               )}
               {state.expenses.length === 0 && (
                 <p className="mt-3 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 py-6 text-center text-sm text-amber-700">
@@ -469,8 +489,10 @@ export default function App() {
                 })}
                 <button
                   type="button"
+                  disabled={state.participants.length === 0}
+                  title={state.participants.length === 0 ? '참가자를 먼저 추가하세요' : undefined}
                   onClick={() => store.addVehicle(tab === 'rental')}
-                  className="w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-green-500 hover:text-green-700"
+                  className="w-full rounded-xl border-2 border-dashed border-stone-400 bg-stone-100 py-3 text-sm font-medium text-stone-600 hover:border-green-500 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   + {tab === 'rental' ? '렌트 차량' : '차량'} 추가
                 </button>
@@ -482,12 +504,17 @@ export default function App() {
                       차량을 추가하면 정산 결과가 표시됩니다.
                     </p>
                   ) : (
-                    <CarpoolResult
-                      result={carpoolResult}
-                      vehicles={state.vehicles}
-                      participants={state.participants}
-                      fuelRatePerKm={fuelRate}
-                    />
+                    <>
+                      <CarpoolResult
+                        result={carpoolResult}
+                        vehicles={state.vehicles}
+                        participants={state.participants}
+                        fuelRatePerKm={fuelRate}
+                      />
+                      <div className="mt-2">
+                        <CopyShareButton text={carpoolShareText} label="카풀 결과 복사" />
+                      </div>
+                    </>
                   )}
                 </>
               ) : (
@@ -497,7 +524,12 @@ export default function App() {
                       렌트 차량을 추가하면 정산 결과가 표시됩니다.
                     </p>
                   ) : (
-                    <RentalResult results={rentalResults} participants={state.participants} />
+                    <>
+                      <RentalResult results={rentalResults} participants={state.participants} />
+                      <div className="mt-2">
+                        <CopyShareButton text={rentalShareText} label="렌트 결과 복사" />
+                      </div>
+                    </>
                   )}
                 </>
               )}
@@ -552,7 +584,7 @@ export default function App() {
                 {state.expenses.length > 0 && <span>🧾 경비 {state.expenses.length}건</span>}
               </div>
               <div className="mt-2 flex items-center justify-between border-t border-amber-100 pt-2">
-                <span className="text-xs text-stone-500">완 정산 금액</span>
+                <span className="text-xs text-stone-500">총 정산 금액</span>
                 <span className="text-sm font-extrabold text-amber-900">
                   {formatKRW(
                     [...finalNetBalance.values()]
@@ -597,7 +629,7 @@ export default function App() {
                             {isBanjang && <span className="text-sm leading-none">👑</span>}
                             {p.name}
                             {isBanjang && (
-                              <span className="ml-0.5 text-xs font-bold text-amber-600">뱙주</span>
+                              <span className="ml-0.5 text-xs font-bold text-amber-600">벙주</span>
                             )}
                           </span>
                         </td>
@@ -830,7 +862,7 @@ export default function App() {
 
       <footer className="mt-8 space-y-1 text-center text-xs text-stone-400">
         <p>⚠ 첫 탑승자 픽업지 기준 왕복거리 입력 · 편도 탑승자도 왕복 동일 기준 · 1원 단위 반올림</p>
-        <p>🌰 도토리 산행 정산 v1.0.3 · 2026-05-23</p>
+        <p>🌰 도토리 산행 정산 v{__APP_VERSION__}</p>
       </footer>
     </div>
   );
