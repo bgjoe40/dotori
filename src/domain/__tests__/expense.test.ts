@@ -77,6 +77,17 @@ describe('calcExpenseSettlement', () => {
     expect(r.transfers.length).toBe(0);
   });
 
+  it('분배 대상 중복 ID는 1회만 반영된다', () => {
+    const participants = [P('a', 'A'), P('b', 'B')];
+    const expenses = [
+      E({ id: 'e1', payerId: 'a', sharerIds: ['a', 'b', 'b'], amount: 9000 }),
+    ];
+    const r = calcExpenseSettlement(expenses, participants);
+    expect(r.items[0].sharerCount).toBe(2);
+    expect(r.items[0].perPerson).toBe(4500);
+    expect(r.transfers).toEqual([{ fromId: 'b', toId: 'a', amount: 4500 }]);
+  });
+
   it('[인원추가] 1인당 5,000원 × 3명 → 총액 15,000원, 각 5,000원 송금', () => {
     const participants = [P('a', 'A'), P('b', 'B'), P('c', 'C'), P('d', 'D')];
     const expenses = [

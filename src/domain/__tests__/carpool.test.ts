@@ -106,6 +106,16 @@ describe('calcCarpoolSettlement', () => {
     expect(r.owed.every((o) => o.total === 0)).toBe(true);
   });
 
+  it('잘못된 데이터로 운전자와 탑승자가 겹쳐도 유류비 분모는 중복 없이 계산', () => {
+    const participants = [P('d', '운전자'), P('p1', '탑1')];
+    const vehicles: Vehicle[] = [
+      V({ id: 'v1', driverIds: ['d'], passengerIds: ['d', 'p1'], distanceKm: 100 }),
+    ];
+    const r = calcCarpoolSettlement(vehicles, participants);
+    expect(r.fuelHeadcount).toBe(2);
+    expect(r.fuelPerPerson).toBe(8500); // 17000 / 2
+  });
+
   it('driverLaborReceipts — 운전자 수고비 수령 합산', () => {
     const participants = [P('d', '운전자'), P('p1', '탑1'), P('p2', '탑2')];
     const vehicles: Vehicle[] = [

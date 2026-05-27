@@ -35,7 +35,9 @@ export function calcRentalSettlement(
   const rentalPerPerson =
     totalHeadcount > 0 ? round(rentalFee / totalHeadcount) : 0;
   const laborPerPassenger =
-    passengers.length > 0 ? round(laborCost / passengers.length) : 0;
+    passengers.length > 0 && drivers.length > 0
+      ? round(laborCost / passengers.length)
+      : 0;
 
   // 수고비 총액(탑승자가 부담) — 운전자에게 분배
   const totalLaborFromPassengers = laborPerPassenger * passengers.length;
@@ -45,16 +47,23 @@ export function calcRentalSettlement(
   const ratioSum = drivers.reduce((s, id) => s + (ratios[id] || 0), 0);
   const useCustomRatio = ratioSum > 0;
 
-  const driverReceipts = drivers.map((did) => {
-    let amount: number;
-    if (useCustomRatio) {
-      const r = ratios[did] || 0;
-      amount = round((totalLaborFromPassengers * r) / ratioSum);
-    } else {
-      amount = round(totalLaborFromPassengers / drivers.length);
-    }
-    return { driverId: did, amount };
-  });
+  const driverReceipts: { driverId: string; amount: number }[] = [];
+  if (drivers.length > 0) {
+    let remaining = totalLaborFromPassengers;
+    drivers.forEach((did, idx) => {
+      let amount: number;
+      if (idx === drivers.length - 1) {
+        amount = remaining;
+      } else if (useCustomRatio) {
+        const r = ratios[did] || 0;
+        amount = round((totalLaborFromPassengers * r) / ratioSum);
+      } else {
+        amount = round(totalLaborFromPassengers / drivers.length);
+      }
+      remaining -= amount;
+      driverReceipts.push({ driverId: did, amount });
+    });
+  }
 
   const driverSet = new Set(drivers);
   const passengerSet = new Set(passengers);

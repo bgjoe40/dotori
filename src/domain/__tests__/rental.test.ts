@@ -73,4 +73,47 @@ describe('calcRentalSettlement', () => {
       { driverId: 'd2', amount: 3000 },
     ]);
   });
+
+  it('운전자가 없으면 수고비는 부과되지 않고 수령도 없다', () => {
+    const participants = [P('p1', 'P1'), P('p2', 'P2')];
+    const v: Vehicle = {
+      id: 'r4',
+      driverIds: [],
+      passengerIds: ['p1', 'p2'],
+      distanceKm: 100,
+      tollFee: 0,
+      parkingFee: 0,
+      isRental: true,
+      rentalFee: 20000,
+    };
+    const r = calcRentalSettlement(v, participants);
+    expect(r.laborPerPassenger).toBe(0);
+    expect(r.driverReceipts).toEqual([]);
+    expect(r.owed.find((o) => o.participantId === 'p1')!.total).toBe(10000);
+    expect(r.owed.find((o) => o.participantId === 'p2')!.total).toBe(10000);
+  });
+
+  it('운전자 비율 분배 반올림 시에도 수령 합계는 탑승자 부담 총액과 일치', () => {
+    const participants = [
+      P('d1', 'D1'),
+      P('d2', 'D2'),
+      P('d3', 'D3'),
+      P('p1', 'P1'),
+      P('p2', 'P2'),
+    ];
+    const v: Vehicle = {
+      id: 'r5',
+      driverIds: ['d1', 'd2', 'd3'],
+      passengerIds: ['p1', 'p2'],
+      distanceKm: 100,
+      tollFee: 0,
+      parkingFee: 0,
+      isRental: true,
+      rentalFee: 50000,
+      driverShareRatios: { d1: 2, d2: 2, d3: 3 },
+    };
+    const r = calcRentalSettlement(v, participants);
+    const totalReceipts = r.driverReceipts.reduce((s, d) => s + d.amount, 0);
+    expect(totalReceipts).toBe(r.laborPerPassenger * v.passengerIds.length);
+  });
 });

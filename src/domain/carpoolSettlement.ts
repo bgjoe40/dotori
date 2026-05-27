@@ -64,7 +64,10 @@ export function calcCarpoolSettlement(
     });
   }
 
-  const fuelHeadcount = carpoolDriverSet.size + carpoolPassengerSet.size;
+  const fuelHeadcount = new Set([
+    ...Array.from(carpoolDriverSet),
+    ...Array.from(carpoolPassengerSet),
+  ]).size;
   const laborHeadcount = carpoolPassengerSet.size;
 
   const fuelPerPerson = fuelHeadcount > 0 ? round(totalFuel / fuelHeadcount) : 0;

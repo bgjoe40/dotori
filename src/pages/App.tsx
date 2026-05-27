@@ -597,7 +597,7 @@ export default function App() {
                             {isBanjang && <span className="text-sm leading-none">👑</span>}
                             {p.name}
                             {isBanjang && (
-                              <span className="ml-0.5 text-xs font-bold text-amber-600">뱙주</span>
+                              <span className="ml-0.5 text-xs font-bold text-amber-600">벙주</span>
                             )}
                           </span>
                         </td>

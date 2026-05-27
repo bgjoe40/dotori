@@ -30,7 +30,7 @@ export function calcExpenseSettlement(
   let totalAmount = 0;
 
   for (const exp of expenses) {
-    const sharers = exp.sharerIds.filter(Boolean);
+    const sharers = Array.from(new Set(exp.sharerIds.filter(Boolean)));
     if (sharers.length === 0 || exp.amount <= 0 || !exp.payerId) continue;
 
     const isEven = !exp.splitMode || exp.splitMode === 'even';
