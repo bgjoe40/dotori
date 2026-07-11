@@ -13,9 +13,12 @@ const round = (n: number) => Math.round(n);
  *
  * 규칙:
  *  - 총 렌트비 = (운전자 + 탑승자) 균등 엔빵
+ *  - 렌트비는 운전자가 선결제했다고 보고, 탑승자 부담분을 운전자에게 환급한다.
+ *    (운전자 본인 부담분은 자기-정산 → 송금 0. 카풀 운전자 driverPayout과 동일 규칙)
  *  - 수고비 = 탑승자만 엔빵 → 운전자에게 송금
- *  - 운전자 2명 이상이면 운전 거리 비율로 분배. 미입력 시 균등.
- *  - 운전자도 본인 렌트비 부담분은 발생 (자기 자신에게 송금 0)
+ *  - 운전자 2명 이상이면 수고비는 운전 거리 비율로 분배(미입력 시 균등),
+ *    렌트비 환급은 결제자 정보가 없으므로 운전자 균등 분배.
+ *  - 불변식: Σ(탑승자 부담) === Σ(운전자 수령) → 최종 정산 합계가 0이 됨.
  */
 export function calcRentalSettlement(
   vehicle: Vehicle,
@@ -40,23 +43,44 @@ export function calcRentalSettlement(
   const laborPerPassenger =
     passengers.length > 0 ? round(laborCost / passengers.length) : 0;
 
-  // 수고비 총액(탑승자가 부담) — 운전자에게 분배
+  // 탑승자가 부담하는 수고비 총액 — 운전자에게 분배
   const totalLaborFromPassengers = laborPerPassenger * passengers.length;
+  // 탑승자가 부담하는 렌트비 총액 — 선결제한 운전자에게 환급
+  // (운전자 본인 부담분은 자기-정산이므로 회수 대상에서 제외)
+  const totalRentalFromPassengers = rentalPerPerson * passengers.length;
 
-  // 비율 결정
+  // 비율 결정 (수고비 분배용. 렌트비 환급은 운전자 균등)
   const ratios = vehicle.driverShareRatios ?? {};
   const ratioSum = drivers.reduce((s, id) => s + (ratios[id] || 0), 0);
   const useCustomRatio = ratioSum > 0;
 
-  const driverReceipts = drivers.map((did) => {
-    let amount: number;
-    if (useCustomRatio) {
-      const r = ratios[did] || 0;
-      amount = round((totalLaborFromPassengers * r) / ratioSum);
+  const baseRentalRecovery =
+    drivers.length > 0 ? round(totalRentalFromPassengers / drivers.length) : 0;
+  let rentalAcc = 0;
+  let laborAcc = 0;
+  const driverReceipts = drivers.map((did, i) => {
+    const isLast = i === drivers.length - 1;
+    // 렌트비 환급: 운전자 균등 (마지막 운전자가 반올림 잔차 흡수)
+    const rentalRecovery = isLast
+      ? totalRentalFromPassengers - rentalAcc
+      : baseRentalRecovery;
+    rentalAcc += rentalRecovery;
+    // 수고비: 비율 입력 시 비율대로, 아니면 균등 (마지막 운전자가 잔차 흡수)
+    let laborReceipt: number;
+    if (isLast) {
+      laborReceipt = totalLaborFromPassengers - laborAcc;
+    } else if (useCustomRatio) {
+      laborReceipt = round((totalLaborFromPassengers * (ratios[did] || 0)) / ratioSum);
     } else {
-      amount = round(totalLaborFromPassengers / drivers.length);
+      laborReceipt = round(totalLaborFromPassengers / drivers.length);
     }
-    return { driverId: did, amount };
+    laborAcc += laborReceipt;
+    return {
+      driverId: did,
+      rentalRecovery,
+      laborReceipt,
+      amount: rentalRecovery + laborReceipt,
+    };
   });
 
   const driverSet = new Set(drivers);

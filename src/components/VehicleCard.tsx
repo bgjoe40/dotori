@@ -230,7 +230,7 @@ export default function VehicleCard({
           <>
             <div>
               <label className="mb-1 block text-xs font-medium text-stone-600">
-                옵 렌트비
+                렌트비
               </label>
               <NumInput
                 value={vehicle.rentalFee ?? 0}

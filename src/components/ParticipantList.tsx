@@ -28,23 +28,24 @@ export default function ParticipantList({
   };
 
   return (
-    <section className="rounded-xl bg-white p-4 shadow-sm">
-      <h2 className="mb-3 text-base font-semibold text-stone-800">
-        <span className="mr-1.5 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">02</span>
-        👥 참가자 명단
-        <span className="ml-2 text-xs font-normal text-stone-500">
+    <section className="app-surface p-5 sm:p-6">
+      <h2 className="app-section-title mb-4">
+        <span className="app-step">02</span>
+        <span>참가자 명단</span>
+        <span className="text-base">👥</span>
+        <span className="ml-1 text-xs font-medium text-stone-500">
           {participants.length}명
         </span>
         {banjangId && (
-          <span className="ml-2 text-xs font-normal text-amber-600">
+          <span className="ml-2 text-xs font-semibold text-amber-600">
             · 벙주: {participants.find((p) => p.id === banjangId)?.name}
           </span>
         )}
       </h2>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <input
-          className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+          className="app-input flex-1"
           placeholder="이름 입력 후 엔터"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -58,29 +59,28 @@ export default function ParticipantList({
         <button
           type="button"
           onClick={submit}
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+          className="rounded-xl bg-green-700 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-green-800 active:scale-[0.98]"
         >
           추가
         </button>
       </div>
 
       {participants.length === 0 ? (
-        <p className="mt-3 text-xs text-stone-400">
-          참가자를 먼저 추가하세요. 카풀 미참여(개인참석)는 토글로 표시할 수
-          있어요.
+        <p className="mt-4 rounded-xl border border-dashed border-stone-300 bg-stone-50 px-3 py-3 text-xs leading-relaxed text-stone-500">
+          참가자를 먼저 추가하세요. 카풀 미참여자는 ‘개인참석’으로 표시할 수 있어요.
         </p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-4 space-y-2">
           {participants.map((p) => {
             const isBanjang = banjangId === p.id;
             return (
               <li
                 key={p.id}
                 className={
-                  'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 transition ' +
+                  'flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 transition ' +
                   (isBanjang
                     ? 'border-amber-400 bg-amber-50'
-                    : 'border-stone-200')
+                    : 'border-stone-200 bg-white hover:border-stone-300')
                 }
               >
                 <div className="flex items-center gap-2">

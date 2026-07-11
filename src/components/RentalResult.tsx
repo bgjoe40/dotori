@@ -43,35 +43,34 @@ export default function RentalResult({ results, participants }: Props) {
 
           <div className="mt-3">
             <h3 className="mb-2 text-xs font-semibold text-stone-600">
-              💸 탑승자/운전자 부담액
+              💸 탑승자 부담액 (→ 운전자에게 송금)
             </h3>
             <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200">
               {r.owed
-                .filter((o) => o.total > 0)
+                .filter((o) => o.total > 0 && !o.isDriver)
                 .map((o) => (
                   <li
                     key={o.participantId}
                     className="flex items-center justify-between px-3 py-2 text-sm"
                   >
-                    <span className="text-stone-800">
-                      {nameOf(o.participantId)}
-                      {o.isDriver && (
-                        <span className="ml-1 text-xs text-purple-700">
-                          (운전자)
-                        </span>
-                      )}
-                    </span>
+                    <span className="text-stone-800">{nameOf(o.participantId)}</span>
                     <span className="font-semibold text-stone-800">
                       {formatKRW(o.total)}
                     </span>
                   </li>
                 ))}
+              {r.owed.filter((o) => o.total > 0 && !o.isDriver).length === 0 && (
+                <li className="px-3 py-2 text-xs text-stone-400">탑승자 없음</li>
+              )}
             </ul>
+            <p className="mt-1 px-1 text-xs text-stone-400">
+              ※ 운전자 본인 렌트비 부담분은 선결제로 자기-정산되어 송금 대상에서 제외됩니다.
+            </p>
           </div>
 
           <div className="mt-3">
             <h3 className="mb-2 text-xs font-semibold text-stone-600">
-              💰 운전자 수령 (수고비)
+              💰 운전자 수령 (렌트비 회수 + 수고비)
             </h3>
             <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200">
               {r.driverReceipts.map((d) => (
@@ -79,7 +78,12 @@ export default function RentalResult({ results, participants }: Props) {
                   key={d.driverId}
                   className="flex items-center justify-between px-3 py-2 text-sm"
                 >
-                  <span className="text-stone-800">{nameOf(d.driverId)}</span>
+                  <span className="text-stone-800">
+                    {nameOf(d.driverId)}
+                    <span className="ml-1 text-xs text-stone-400">
+                      (렌트비 {formatKRW(d.rentalRecovery)} · 수고비 {formatKRW(d.laborReceipt)})
+                    </span>
+                  </span>
                   <span className="font-semibold text-green-700">
                     +{formatKRW(d.amount)}
                   </span>

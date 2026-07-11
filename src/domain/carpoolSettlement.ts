@@ -63,6 +63,9 @@ export function calcCarpoolSettlement(
       if (carpoolParticipantIds.has(id)) carpoolPassengerSet.add(id);
     });
   }
+  // 한 사람이 어떤 차의 운전자이면서 다른 차의 탑승자로 잡혀도 운전자로만 카운트
+  // (분모 이중 카운트 및 수고비 누락 방지. UI는 차량 중복 배정을 막지만 JSON import 대비)
+  for (const id of carpoolDriverSet) carpoolPassengerSet.delete(id);
 
   const fuelHeadcount = carpoolDriverSet.size + carpoolPassengerSet.size;
   const laborHeadcount = carpoolPassengerSet.size;

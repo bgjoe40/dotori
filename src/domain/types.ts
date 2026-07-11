@@ -160,8 +160,16 @@ export interface RentalSettlement {
   rentalPerPerson: number;
   /** 1인당 수고비 (탑승자만 균등) */
   laborPerPassenger: number;
-  /** 운전자별 수령액 (탑승자들이 보낸 수고비 합) */
-  driverReceipts: { driverId: ID; amount: number }[];
+  /** 운전자별 수령액 (탑승자들이 보낸 렌트비 회수 + 수고비) */
+  driverReceipts: {
+    driverId: ID;
+    /** 탑승자들이 환급하는 렌트비 회수분 (운전자 본인 부담분 제외) */
+    rentalRecovery: number;
+    /** 탑승자들이 보낸 수고비 */
+    laborReceipt: number;
+    /** 총 수령액 = rentalRecovery + laborReceipt */
+    amount: number;
+  }[];
   /** 참가자별 부담액 */
   owed: ParticipantOwed[];
 }

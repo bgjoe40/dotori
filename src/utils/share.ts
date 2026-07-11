@@ -89,16 +89,17 @@ export function buildRentalShareText(
     lines.push(
       `1인당 수고비: ${formatKRW(r.laborPerPassenger)} (탑승자 ${v.passengerIds.length}명)`,
     );
-    lines.push('구성원별 부담액');
+    lines.push('탑승자 부담액 (→ 운전자에게 송금)');
     for (const o of r.owed) {
-      if (o.total <= 0) continue;
+      if (o.total <= 0 || o.isDriver) continue;
       const name = nameOf(o.participantId, participants);
-      const tag = o.isDriver ? ' (운전자)' : '';
-      lines.push(`• ${name}${tag}: ${formatKRW(o.total)}`);
+      lines.push(`• ${name}: ${formatKRW(o.total)}`);
     }
-    lines.push('운전자 수령 (수고비)');
+    lines.push('운전자 수령 (렌트비 회수 + 수고비)');
     for (const d of r.driverReceipts) {
-      lines.push(`• ${nameOf(d.driverId, participants)}: ${formatKRW(d.amount)}`);
+      lines.push(
+        `• ${nameOf(d.driverId, participants)}: ${formatKRW(d.amount)} (렌트비 ${formatKRW(d.rentalRecovery)} · 수고비 ${formatKRW(d.laborReceipt)})`,
+      );
     }
   }
   return lines.join('\n');

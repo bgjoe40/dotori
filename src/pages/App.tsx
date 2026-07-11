@@ -21,6 +21,8 @@ import { formatKRW } from '../utils/format';
 
 type Tab = 'carpool' | 'rental' | 'expense';
 
+const RELEASE_DATE = '2026.07.11';
+
 export default function App() {
   const store = useSettlementStore();
   const [tab, setTab] = useState<Tab>('carpool');
@@ -111,7 +113,11 @@ export default function App() {
     }
     for (const d of carpoolResult.driverPayouts) add(d.driverId, d.amount);
     for (const { result } of rentalResults) {
-      for (const p of result.owed) add(p.participantId, -p.total);
+      // 렌트 운전자는 렌트비를 선결제했으므로 본인 부담분은 자기-정산(차감 안 함).
+      // 카풀과 동일하게 운전자 수령액(driverReceipts)만 가산한다.
+      for (const p of result.owed) {
+        if (!p.isDriver) add(p.participantId, -p.total);
+      }
       for (const d of result.driverReceipts) add(d.driverId, d.amount);
     }
     for (const t of expenseResult.transfers) {
@@ -191,12 +197,14 @@ export default function App() {
       }
 
       // 렌트 부담/수령
-      rentalResults.forEach(({ vehicle: rv, result: rr }, idx) => {
+      // 운전자는 본인 렌트비 부담분을 선결제로 자기-정산하므로 부담 항목으로 표시하지 않음
+      // (카풀 운전자와 동일). 대신 driverReceipts(렌트비 회수 + 수고비)만 표시한다.
+      rentalResults.forEach(({ result: rr }, idx) => {
         const rOwed = rr.owed.find((o) => o.participantId === p.id);
-        if (rOwed && rOwed.fuelShare > 0) {
+        if (rOwed && !rOwed.isDriver && rOwed.fuelShare > 0) {
           items.push({ label: `🚐 렌트비 (차량${idx + 1})`, amount: -rOwed.fuelShare });
         }
-        if (rOwed && rOwed.laborShare > 0) {
+        if (rOwed && !rOwed.isDriver && rOwed.laborShare > 0) {
           items.push({ label: `🚐 수고비 (차량${idx + 1})`, amount: -rOwed.laborShare });
         }
         for (const dr of rr.driverReceipts) {
@@ -204,7 +212,6 @@ export default function App() {
             items.push({ label: `🚐 운전자 수령 (차량${idx + 1})`, amount: dr.amount });
           }
         }
-        void rv; // used for array index only
       });
 
       // 경비 부담/수령 (항목별)
@@ -310,26 +317,31 @@ export default function App() {
   };
 
   return (
-    <div className="relative mx-auto min-h-screen max-w-2xl px-4 pb-24 pt-6">
+    <div className="app-shell relative mx-auto min-h-screen max-w-3xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6">
       <SkyBackground />
       {showGuide && <GuideModal onClose={handleGuideClose} />}
       <AcornRain />
       {/* 헤더 */}
-      <header className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-stone-900">🌰 도토리 산행 정산</h1>
-          <p className="mt-1 text-xs text-stone-500">
-            유류비 + 수고비 + 추가 경비를 자동 계산하여 엔빵 정산해 드려요.
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
+      <header className="app-hero mb-5 overflow-hidden rounded-3xl px-5 py-5 sm:px-6 sm:py-6">
+        <div className="relative z-10 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span aria-hidden="true" className="app-logo">🌰</span>
+            <div>
+              <p className="app-eyebrow">HIKING SETTLEMENT</p>
+              <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">도토리 산행 정산</h1>
+              <p className="mt-1.5 text-sm leading-relaxed text-emerald-50/80">
+                함께한 하루의 비용을 쉽고 정확하게 나눠요.
+              </p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
           <button
             ref={guideButtonRef}
             type="button"
             onClick={() => setShowGuide(true)}
             aria-label="사용 가이드 열기"
             title="사용 가이드"
-            className="rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm shadow-sm hover:border-amber-400"
+            className="app-hero-action"
           >
             📖
           </button>
@@ -338,18 +350,25 @@ export default function App() {
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
             title={theme === 'dark' ? '라이트 모드' : '다크 모드'}
-            className="rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm shadow-sm hover:border-amber-400"
+            className="app-hero-action"
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </div>
+        </div>
+        <div className="relative z-10 mt-5 flex flex-wrap gap-2">
+          <span className="app-hero-chip">👥 참가자 {state.participants.length}명</span>
+          <span className="app-hero-chip">🚗 차량 {state.vehicles.length}대</span>
+          <span className="app-hero-chip">🧾 경비 {state.expenses.length}건</span>
+        </div>
       </header>
 
       {/* 모임 정보 */}
-      <section className="mb-4 rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-base font-semibold text-stone-800">
-          <span className="mr-1.5 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">01</span>
-          📅 모임 정보
+      <section className="app-surface mb-5 p-5 sm:p-6">
+        <h2 className="app-section-title mb-4">
+          <span className="app-step">01</span>
+          <span>모임 정보</span>
+          <span className="text-base">📅</span>
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_auto]">
           <input
@@ -357,13 +376,13 @@ export default function App() {
             placeholder="모임 이름 (예: 5월 북한산 벙)"
             value={state.meeting.name}
             onChange={(e) => store.setMeeting({ name: e.target.value })}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+            className="app-input"
           />
           <input
             type="date"
             value={state.meeting.date}
             onChange={(e) => store.setMeeting({ date: e.target.value })}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+            className="app-input"
           />
           <div className="relative">
             <input
@@ -375,7 +394,7 @@ export default function App() {
                 const v = Number(e.target.value);
                 store.setFuelRate(Number.isNaN(v) ? FUEL_RATE_PER_KM : v);
               }}
-              className="w-full sm:w-28 rounded-lg border border-red-300 px-3 py-2 pr-14 text-sm focus:border-red-500 focus:outline-none"
+              className="app-input w-full border-amber-300 pr-14 focus:border-amber-500 sm:w-28"
               title="유류비 km당 단가"
             />
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-500">
@@ -383,13 +402,13 @@ export default function App() {
             </span>
           </div>
         </div>
-        <p className="mt-1 text-xs text-stone-400">
-          🔴 유류비 단가 기본값 {FUEL_RATE_PER_KM}원/km — 차량 연비에 따라 조정 가능
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-stone-500">
+          <span aria-hidden="true">💡</span> 유류비 단가 기본값 {FUEL_RATE_PER_KM}원/km · 차량 연비에 따라 조정할 수 있어요.
         </p>
       </section>
 
       {/* 참가자 */}
-      <div className="mb-4">
+      <div className="mb-5">
         <ParticipantList
           participants={state.participants}
           banjangId={banjangId}
@@ -401,15 +420,16 @@ export default function App() {
       </div>
 
       {/* 주제 서비스 입력용 탭 */}
-      <div className="mb-1.5 flex items-center gap-2">
-        <span className="rounded bg-stone-200 px-1.5 py-0.5 text-xs font-bold text-stone-500">03</span>
-        <span className="text-base font-semibold text-stone-800">비용 입력</span>
+      <div className="mb-2 flex items-center gap-2">
+        <span className="app-step">03</span>
+        <span className="app-section-title">비용 입력</span>
+        <span className="text-base">🧮</span>
       </div>
       {/* 탭 + 콘텐츠 (같은 배경) */}
-      <div className={`mb-4 overflow-hidden rounded-2xl ${
+      <div className={`app-tabs mb-5 overflow-hidden rounded-3xl ${
         tab === 'carpool' ? 'bg-green-100' : tab === 'expense' ? 'bg-amber-100' : 'bg-purple-100'
       }`}>
-        <div className="flex gap-1 p-1">
+        <div className="flex gap-1.5 p-2">
           <TabButton active={tab === 'carpool'} activeClass="bg-green-600 text-white shadow" onClick={() => setTab('carpool')}>
             🚙 카풀
           </TabButton>
@@ -862,7 +882,7 @@ export default function App() {
 
       <footer className="mt-8 space-y-1 text-center text-xs text-stone-400">
         <p>⚠ 첫 탑승자 픽업지 기준 왕복거리 입력 · 편도 탑승자도 왕복 동일 기준 · 1원 단위 반올림</p>
-        <p>🌰 도토리 산행 정산 v{__APP_VERSION__}</p>
+        <p>🌰 도토리 산행 정산 · v{__APP_VERSION__} · 릴리즈 {RELEASE_DATE}</p>
       </footer>
     </div>
   );
