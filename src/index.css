@@ -157,6 +157,94 @@ html.dark .app-input { border-color: #57534e; background: #292524; color: #f5f5f
 html.dark .app-input:hover { border-color: #78716c; }
 html.dark .app-input:focus { border-color: #86efac; box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.12); }
 
+.app-wizard-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid rgba(120, 113, 108, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 10px 22px -22px rgba(41, 37, 36, 0.45);
+}
+
+.app-wizard-tab {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border-radius: 12px;
+  padding: 8px 9px;
+  color: #78716c;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: left;
+  transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.app-wizard-tab:hover { background: #f5f5f4; color: #44403c; }
+.app-wizard-tab-active { background: #1f5b45; color: white; box-shadow: 0 5px 12px -7px rgba(21, 61, 47, 0.8); }
+.app-wizard-tab-active:hover { background: #153d2f; color: white; }
+.app-wizard-step { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; opacity: 0.68; }
+
+.app-workspace-main { min-width: 0; }
+
+.app-summary-empty {
+  display: flex;
+  min-height: 280px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d6d3d1;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 32px 22px;
+  text-align: center;
+}
+
+.app-summary-empty h2 { margin-top: 12px; color: #44403c; font-size: 16px; font-weight: 800; }
+.app-summary-empty p { max-width: 280px; margin-top: 7px; color: #78716c; font-size: 13px; line-height: 1.6; }
+.app-summary-empty-action {
+  margin-top: 18px;
+  border-radius: 10px;
+  background: #1f5b45;
+  padding: 9px 13px;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+.app-summary-empty-action:hover { background: #153d2f; }
+
+@media (min-width: 1024px) {
+  .app-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.72fr);
+    align-items: start;
+    gap: 24px;
+  }
+
+  .app-workspace-summary {
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+    padding-right: 3px;
+  }
+
+  .app-workspace-summary-mode { grid-template-columns: minmax(0, 1fr); }
+  .app-workspace-summary-mode .app-workspace-summary { width: min(720px, 100%); margin: 0 auto; }
+}
+
+html.dark .app-wizard-nav { border-color: rgba(255, 255, 255, 0.08); background: rgba(41, 37, 36, 0.82); }
+html.dark .app-wizard-tab { color: #a8a29e; }
+html.dark .app-wizard-tab:hover { background: #44403c; color: #f5f5f4; }
+html.dark .app-wizard-tab-active, html.dark .app-wizard-tab-active:hover { background: #26734f; color: white; }
+html.dark .app-summary-empty { border-color: #57534e; background: rgba(41, 37, 36, 0.86); }
+html.dark .app-summary-empty h2 { color: #f5f5f4; }
+html.dark .app-summary-empty p { color: #a8a29e; }
+
 /* 접근성: 키보드 포커스 시 시각적 링 표시 */
 :focus-visible {
   outline: 2px solid #d97706 !important; /* amber-600 */

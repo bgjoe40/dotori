@@ -20,12 +20,14 @@ import { buildCarpoolShareText, buildRentalShareText, buildExpenseShareText, bui
 import { formatKRW } from '../utils/format';
 
 type Tab = 'carpool' | 'rental' | 'expense';
+type WizardStep = 'meeting' | 'participants' | 'expenses' | 'summary';
 
 const RELEASE_DATE = '2026.07.11';
 
 export default function App() {
   const store = useSettlementStore();
   const [tab, setTab] = useState<Tab>('carpool');
+  const [wizardStep, setWizardStep] = useState<WizardStep>('meeting');
   const [showGuide, setShowGuide] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
@@ -316,6 +318,10 @@ export default function App() {
     }
   };
 
+  const hasSettlementData =
+    state.participants.length > 0 &&
+    (carpoolVehicles.length > 0 || rentalVehicles.length > 0 || state.expenses.length > 0);
+
   return (
     <div className="app-shell relative mx-auto min-h-screen max-w-3xl px-4 pb-24 pt-4 sm:px-6 sm:pt-6">
       <SkyBackground />
@@ -363,7 +369,39 @@ export default function App() {
         </div>
       </header>
 
+      <nav className="app-wizard-nav mb-5" aria-label="정산 입력 단계" role="tablist">
+        <WizardTab
+          active={wizardStep === 'meeting'}
+          onClick={() => setWizardStep('meeting')}
+          step="01"
+          label="모임"
+        />
+        <WizardTab
+          active={wizardStep === 'participants'}
+          onClick={() => setWizardStep('participants')}
+          step="02"
+          label={`참가자 ${state.participants.length}`}
+        />
+        <WizardTab
+          active={wizardStep === 'expenses'}
+          onClick={() => setWizardStep('expenses')}
+          step="03"
+          label="비용 입력"
+        />
+        <WizardTab
+          active={wizardStep === 'summary'}
+          onClick={() => setWizardStep('summary')}
+          step="04"
+          label="정산 보기"
+        />
+      </nav>
+
+      <div className={`app-workspace ${wizardStep === 'summary' ? 'app-workspace-summary-mode' : ''}`}>
+        {wizardStep !== 'summary' && (
+          <main className="app-workspace-main">
+
       {/* 모임 정보 */}
+      {wizardStep === 'meeting' && (
       <section className="app-surface mb-5 p-5 sm:p-6">
         <h2 className="app-section-title mb-4">
           <span className="app-step">01</span>
@@ -406,8 +444,10 @@ export default function App() {
           <span aria-hidden="true">💡</span> 유류비 단가 기본값 {FUEL_RATE_PER_KM}원/km · 차량 연비에 따라 조정할 수 있어요.
         </p>
       </section>
+      )}
 
       {/* 참가자 */}
+      {wizardStep === 'participants' && (
       <div className="mb-5">
         <ParticipantList
           participants={state.participants}
@@ -418,8 +458,11 @@ export default function App() {
           onSetBanjang={store.setBanjang}
         />
       </div>
+      )}
 
       {/* 주제 서비스 입력용 탭 */}
+      {wizardStep === 'expenses' && (
+      <>
       <div className="mb-2 flex items-center gap-2">
         <span className="app-step">03</span>
         <span className="app-section-title">비용 입력</span>
@@ -557,10 +600,14 @@ export default function App() {
           )}
         </div>
       </div>
+      </>
+      )}
+          </main>
+        )}
 
       {/* 최종 정산 요약 */}
-      {state.participants.length > 0 &&
-        (carpoolVehicles.length > 0 || rentalVehicles.length > 0 || state.expenses.length > 0) && (
+      <aside className={`app-workspace-summary ${wizardStep === 'summary' ? '' : 'hidden lg:block'}`}>
+      {hasSettlementData ? (
           <section className="relative z-10 mb-4 overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4 shadow-lg shadow-amber-100">
             {/* 벙주 미선택 안내 */}
             {!banjangId && (
@@ -840,7 +887,22 @@ export default function App() {
               <CopyShareButton text={combinedShareText} />
             </div>
           </section>
+        ) : (
+          <section className="app-summary-empty">
+            <span className="text-3xl" aria-hidden="true">📊</span>
+            <h2>정산 결과를 준비 중이에요</h2>
+            <p>참가자와 카풀·렌트·경비 항목을 입력하면 여기에서 통합 정산을 확인할 수 있어요.</p>
+            <button
+              type="button"
+              onClick={() => setWizardStep(state.participants.length === 0 ? 'participants' : 'expenses')}
+              className="app-summary-empty-action"
+            >
+              {state.participants.length === 0 ? '참가자 입력하기' : '비용 입력하기'}
+            </button>
+          </section>
         )}
+      </aside>
+      </div>
 
       {/* 백업/초기화 */}
       <section className="rounded-xl bg-white p-4 shadow-sm">
@@ -909,6 +971,31 @@ function TabButton({
       }
     >
       {children}
+    </button>
+  );
+}
+
+function WizardTab({
+  active,
+  onClick,
+  step,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  step: string;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={'app-wizard-tab ' + (active ? 'app-wizard-tab-active' : '')}
+    >
+      <span className="app-wizard-step">{step}</span>
+      <span>{label}</span>
     </button>
   );
 }
